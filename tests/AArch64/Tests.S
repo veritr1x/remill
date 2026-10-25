@@ -362,6 +362,8 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/DATAXFER/STUR_n_LDST_UNSCALED.S"
 #include "tests/AArch64/DATAXFER/UMOV.S"
 #include "tests/AArch64/DATAXFER/INS_ASIMDINS_IR_R.S"
+#include "tests/AArch64/DATAXFER/INS_DUP_ELEMENT.S"
+#include "tests/AArch64/DATAXFER/STP_STR_Vn_IDX.S"
 
 #include "tests/AArch64/LOGICAL/AND_n_LOG_IMM.S"
 #include "tests/AArch64/LOGICAL/AND_n_LOG_SHIFT.S"
@@ -384,6 +386,7 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/COND/x_CSINC_n_CONDSEL.S"
 #include "tests/AArch64/COND/x_CSINV_n_CONDSEL.S"
 #include "tests/AArch64/COND/CCMN_n_CONDCMP_IMM.S"
+#include "tests/AArch64/COND/FCSEL_n_FLOATSEL.S"
 
 #include "tests/AArch64/SIMD/ADD_ASIMDSAME_ONLY.S"
 #include "tests/AArch64/SIMD/ADDP_ASIMDSAME_ONLY.S"
@@ -398,6 +401,9 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/SIMD/EOR_ASIMDSAME_ONLY.S"
 #include "tests/AArch64/SIMD/FMAXV_ASIMDALL_ONLY_SD_4S.S"
 #include "tests/AArch64/SIMD/FMINV_ASIMDALL_ONLY_SD_4S.S"
+#include "tests/AArch64/SIMD/FP_ASIMDSAME_ONLY.S"
+#include "tests/AArch64/SIMD/FMUL_ASIMDELEM_R_SD.S"
+#include "tests/AArch64/SIMD/FP_SCALAR_EXCEPT.S"
 #include "tests/AArch64/SIMD/ORR_ASIMDSAME_ONLY.S"
 #include "tests/AArch64/SIMD/FMOV_VECTORS.S"
 #include "tests/AArch64/SIMD/SMAX_ASIMDSAME_ONLY.S"

@@ -4364,6 +4364,259 @@ bool TryDecodeINS_ASIMDINS_IR_R(const InstData &data, Instruction &inst) {
   return true;
 }
 
+static void AddElementSizeSuffix(Instruction &inst, uint64_t size) {
+  static const char *const kSuffixes[] = {"_B", "_H", "_S", "_D"};
+  inst.function += kSuffixes[size];
+}
+
+// INS  <Vd>.<Ts>[<index1>], <Vn>.<Ts>[<index2>]
+bool TryDecodeINS_ASIMDINS_IV_V(const InstData &data, Instruction &inst) {
+  uint64_t size = 0;
+  if (!LeastSignificantSetBit(data.imm5.uimm, &size) || size > 3) {
+    return false;
+  }
+  AddElementSizeSuffix(inst, size);
+  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rd);
+  AddImmOperand(inst, data.imm5.uimm >> (size + 1));
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, data.Rn);
+  AddImmOperand(inst, data.imm4.uimm >> size);
+  return true;
+}
+
+// DUP  <Vd>.<T>, <Vn>.<Ts>[<index>]
+bool TryDecodeDUP_ASIMDINS_DV_V(const InstData &data, Instruction &inst) {
+  uint64_t size = 0;
+  if (!LeastSignificantSetBit(data.imm5.uimm, &size) || size > 3) {
+    return false;
+  } else if (size == 3 && !data.Q) {
+    return false;  // `if size == 3 && Q == '0' then ReservedValue();`
+  }
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8UL << size);
+  AddRegOperand(inst, kActionWrite, data.Q ? kRegQ : kRegD, kUseAsValue,
+                data.Rd);
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, data.Rn);
+  AddImmOperand(inst, data.imm5.uimm >> (size + 1));
+  return true;
+}
+
+// DUP  <V><d>, <Vn>.<T>[<index>]  (alias MOV)
+bool TryDecodeDUP_ASISDONE_ONLY(const InstData &data, Instruction &inst) {
+  static const RegClass kClasses[] = {kRegB, kRegH, kRegS, kRegD};
+  uint64_t size = 0;
+  if (!LeastSignificantSetBit(data.imm5.uimm, &size) || size > 3) {
+    return false;
+  }
+  AddElementSizeSuffix(inst, size);
+  AddRegOperand(inst, kActionWrite, kClasses[size], kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, data.Rn);
+  AddImmOperand(inst, data.imm5.uimm >> (size + 1));
+  return true;
+}
+
+// Shared by the floating-point "three registers of the same type" vector forms.
+static bool TryDecodeFP_ASIMDSAME(const InstData &data, Instruction &inst) {
+  if (data.sz && !data.Q) {
+    return false;  // `if sz:Q == '10' then ReservedValue();`
+  }
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32UL << data.sz);
+  return TryDecodeRdW_Rn_Rm(data, inst, data.Q ? kRegQ : kRegD);
+}
+
+// FADD  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
+bool TryDecodeFADD_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+
+// FSUB  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
+bool TryDecodeFSUB_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+
+// FMUL  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
+bool TryDecodeFMUL_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+
+// FDIV  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
+bool TryDecodeFDIV_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+
+// FADDP  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
+bool TryDecodeFADDP_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+
+// The element index and register of the by-element forms (single and double precision).
+static bool DecodeFPElement(const InstData &data, uint64_t *index,
+                            RegNum *reg) {
+  if (data.sz && data.L) {
+    return false;  // `if sz:L == '11' then UnallocatedEncoding();`
+  }
+  *index = data.sz ? data.H : ((data.H << 1) | data.L);
+  *reg = static_cast<RegNum>((data.M << 4) | static_cast<uint8_t>(data.Rm));
+  return true;
+}
+
+// FMUL  <Vd>.<T>, <Vn>.<T>, <Vm>.<Ts>[<index>]
+bool TryDecodeFMUL_ASIMDELEM_R_SD(const InstData &data, Instruction &inst) {
+  uint64_t index = 0;
+  RegNum rm;
+  if (!DecodeFPElement(data, &index, &rm) || (data.sz && !data.Q)) {
+    return false;
+  }
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32UL << data.sz);
+  auto rclass = data.Q ? kRegQ : kRegD;
+  AddRegOperand(inst, kActionWrite, rclass, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rn);
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, rm);
+  AddImmOperand(inst, index);
+  return true;
+}
+
+// FMUL  <V><d>, <V><n>, <Vm>.<Ts>[<index>]
+bool TryDecodeFMUL_ASISDELEM_R_SD(const InstData &data, Instruction &inst) {
+  uint64_t index = 0;
+  RegNum rm;
+  if (!DecodeFPElement(data, &index, &rm)) {
+    return false;
+  }
+  AddElementSizeSuffix(inst, 2 + data.sz);
+  auto rclass = data.sz ? kRegD : kRegS;
+  AddRegOperand(inst, kActionWrite, rclass, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rn);
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, rm);
+  AddImmOperand(inst, index);
+  return true;
+}
+
+// FCSEL  <Sd>, <Sn>, <Sm>, <cond>
+bool TryDecodeFCSEL_S_FLOATSEL(const InstData &data, Instruction &inst) {
+  TryDecodeRdW_Rn_Rm(data, inst, kRegS);
+  SetConditionalFunctionName(data, inst, false);
+  return true;
+}
+
+// FCSEL  <Dd>, <Dn>, <Dm>, <cond>
+bool TryDecodeFCSEL_D_FLOATSEL(const InstData &data, Instruction &inst) {
+  TryDecodeRdW_Rn_Rm(data, inst, kRegD);
+  SetConditionalFunctionName(data, inst, false);
+  return true;
+}
+
+// Pre- and post-indexed STP of S, D and Q registers.
+static bool TryDecodeSTP_Vn_LDSTPAIR_IDX(const InstData &data,
+                                         Instruction &inst, RegClass rclass,
+                                         bool pre) {
+  auto size = ReadRegSize(rclass);
+  auto scale = 2U + data.opc;
+  if (data.opc == 0x3) {
+    return false;  // `if opc == '11' then UnallocatedEncoding();`.
+  }
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rt);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rt2);
+  auto offset = static_cast<uint64_t>(data.imm7.simm7) << scale;
+  if (pre) {
+    AddPreIndexMemOp(inst, kActionWrite, size * 2, data.Rn, offset);
+  } else {
+    AddPostIndexMemOp(inst, kActionWrite, size * 2, data.Rn, offset);
+  }
+  return true;
+}
+
+// STP  <St1>, <St2>, [<Xn|SP>, #<imm>]!
+bool TryDecodeSTP_S_LDSTPAIR_PRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTP_Vn_LDSTPAIR_IDX(data, inst, kRegS, true);
+}
+
+// STP  <Dt1>, <Dt2>, [<Xn|SP>, #<imm>]!
+bool TryDecodeSTP_D_LDSTPAIR_PRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTP_Vn_LDSTPAIR_IDX(data, inst, kRegD, true);
+}
+
+// STP  <Qt1>, <Qt2>, [<Xn|SP>, #<imm>]!
+bool TryDecodeSTP_Q_LDSTPAIR_PRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTP_Vn_LDSTPAIR_IDX(data, inst, kRegQ, true);
+}
+
+// STP  <St1>, <St2>, [<Xn|SP>], #<imm>
+bool TryDecodeSTP_S_LDSTPAIR_POST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTP_Vn_LDSTPAIR_IDX(data, inst, kRegS, false);
+}
+
+// STP  <Dt1>, <Dt2>, [<Xn|SP>], #<imm>
+bool TryDecodeSTP_D_LDSTPAIR_POST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTP_Vn_LDSTPAIR_IDX(data, inst, kRegD, false);
+}
+
+// STP  <Qt1>, <Qt2>, [<Xn|SP>], #<imm>
+bool TryDecodeSTP_Q_LDSTPAIR_POST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTP_Vn_LDSTPAIR_IDX(data, inst, kRegQ, false);
+}
+
+// Pre- and post-indexed STR of B, H, S, D and Q registers.
+static bool TryDecodeSTR_Vn_LDST_IMMIDX(const InstData &data,
+                                        Instruction &inst, RegClass rclass,
+                                        bool pre) {
+  if (DecodeScale(data) > 4) {
+    return false;
+  }
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rt);
+  auto offset = static_cast<uint64_t>(data.imm9.simm9);
+  if (pre) {
+    AddPreIndexMemOp(inst, kActionWrite, ReadRegSize(rclass), data.Rn, offset);
+  } else {
+    AddPostIndexMemOp(inst, kActionWrite, ReadRegSize(rclass), data.Rn,
+                      offset);
+  }
+  return true;
+}
+
+// STR  <Bt>, [<Xn|SP>, #<simm>]!
+bool TryDecodeSTR_B_LDST_IMMPRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegB, true);
+}
+
+// STR  <Ht>, [<Xn|SP>, #<simm>]!
+bool TryDecodeSTR_H_LDST_IMMPRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegH, true);
+}
+
+// STR  <St>, [<Xn|SP>, #<simm>]!
+bool TryDecodeSTR_S_LDST_IMMPRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegS, true);
+}
+
+// STR  <Dt>, [<Xn|SP>, #<simm>]!
+bool TryDecodeSTR_D_LDST_IMMPRE(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegD, true);
+}
+
+// STR  <Bt>, [<Xn|SP>], #<simm>
+bool TryDecodeSTR_B_LDST_IMMPOST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegB, false);
+}
+
+// STR  <Ht>, [<Xn|SP>], #<simm>
+bool TryDecodeSTR_H_LDST_IMMPOST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegH, false);
+}
+
+// STR  <St>, [<Xn|SP>], #<simm>
+bool TryDecodeSTR_S_LDST_IMMPOST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegS, false);
+}
+
+// STR  <Dt>, [<Xn|SP>], #<simm>
+bool TryDecodeSTR_D_LDST_IMMPOST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegD, false);
+}
+
+// STR  <Qt>, [<Xn|SP>], #<simm>
+bool TryDecodeSTR_Q_LDST_IMMPOST(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_IMMIDX(data, inst, kRegQ, false);
+}
+
 // LD1  { <Vt>.<T> }, [<Xn|SP>]
 bool TryDecodeLD1_ASISDLSE_R1_1V(const InstData &data, Instruction &inst) {
   uint64_t num_bytes = 0;

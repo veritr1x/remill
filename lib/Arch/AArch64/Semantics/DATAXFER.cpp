@@ -68,19 +68,45 @@ DEF_SEM(STP_D, V64 src1, V64 src2, MV128W dst) {
   return memory;
 }
 
-// MvW type isnt supported
-// remill/remill/Arch/Runtime/Operators.h:437:1: error: static_assert failed "Invalid value size for MVnW."
-// MAKE_MWRITEV(U, 128, dqwords, 128, uint128_t)
+// The pair of Q registers is a 256-bit store, so it needs MV256W (an MV128W
+// destination fails the size check in MAKE_MWRITEV).
+DEF_SEM(STP_Q, V128 src1, V128 src2, MV256W dst) {
+  uint128v2_t tmp_vec = {};
+  tmp_vec = UInsertV128(tmp_vec, 0, UExtractV128(UReadV128(src1), 0));
+  tmp_vec = UInsertV128(tmp_vec, 1, UExtractV128(UReadV128(src2), 0));
+  UWriteV128(dst, tmp_vec);
+  return memory;
+}
 
-// DEF_SEM(STP_Q, V128 src1, V128 src2, MV128W dst) {
-//   auto src1_vec = UReadV128(src1);
-//   auto src2_vec = UReadV128(src2);
-//   uint128v2_t tmp_vec = {};
-//   tmp_vec = UInsertV128(tmp_vec, 0, UExtractV128(src1_vec, 0));
-//   tmp_vec = UInsertV128(tmp_vec, 1, UExtractV128(src2_vec, 0));
-//   UWriteV128(dst, tmp_vec);
-//   return memory;
-// }
+DEF_SEM(STP_S_UpdateIndex, V32 src1, V32 src2, MV64W dst, R64W dst_reg,
+        ADDR next_addr) {
+  float32v2_t tmp_vec = {};
+  tmp_vec = FInsertV32(tmp_vec, 0, FExtractV32(FReadV32(src1), 0));
+  tmp_vec = FInsertV32(tmp_vec, 1, FExtractV32(FReadV32(src2), 0));
+  FWriteV32(dst, tmp_vec);
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
+
+DEF_SEM(STP_D_UpdateIndex, V64 src1, V64 src2, MV128W dst, R64W dst_reg,
+        ADDR next_addr) {
+  float64v2_t tmp_vec = {};
+  tmp_vec = FInsertV64(tmp_vec, 0, FExtractV64(FReadV64(src1), 0));
+  tmp_vec = FInsertV64(tmp_vec, 1, FExtractV64(FReadV64(src2), 0));
+  FWriteV64(dst, tmp_vec);
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
+
+DEF_SEM(STP_Q_UpdateIndex, V128 src1, V128 src2, MV256W dst, R64W dst_reg,
+        ADDR next_addr) {
+  uint128v2_t tmp_vec = {};
+  tmp_vec = UInsertV128(tmp_vec, 0, UExtractV128(UReadV128(src1), 0));
+  tmp_vec = UInsertV128(tmp_vec, 1, UExtractV128(UReadV128(src2), 0));
+  UWriteV128(dst, tmp_vec);
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
 }  // namespace
 
 DEF_ISEL(STP_32_LDSTPAIR_PRE) = StorePairUpdateIndex32;
@@ -95,7 +121,14 @@ DEF_ISEL(STP_64_LDSTPAIR_OFF) = StorePair64;
 DEF_ISEL(STP_S_LDSTPAIR_OFF) = STP_S;
 DEF_ISEL(STP_D_LDSTPAIR_OFF) = STP_D;
 
-// DEF_ISEL(STP_Q_LDSTPAIR_OFF) = STP_Q;
+DEF_ISEL(STP_Q_LDSTPAIR_OFF) = STP_Q;
+
+DEF_ISEL(STP_S_LDSTPAIR_PRE) = STP_S_UpdateIndex;
+DEF_ISEL(STP_S_LDSTPAIR_POST) = STP_S_UpdateIndex;
+DEF_ISEL(STP_D_LDSTPAIR_PRE) = STP_D_UpdateIndex;
+DEF_ISEL(STP_D_LDSTPAIR_POST) = STP_D_UpdateIndex;
+DEF_ISEL(STP_Q_LDSTPAIR_PRE) = STP_Q_UpdateIndex;
+DEF_ISEL(STP_Q_LDSTPAIR_POST) = STP_Q_UpdateIndex;
 
 namespace {
 
@@ -699,6 +732,30 @@ DEF_SEM(STR_Q_FromOffset, V128 src, MV128W dst, ADDR offset) {
   UWriteV128(DisplaceAddress(dst, Read(offset)), UReadV128(src));
   return memory;
 }
+
+DEF_SEM(STR_B_UpdateIndex, V8 src, MV8W dst, R64W dst_reg, ADDR next_addr) {
+  UWriteV8(dst, UReadV8(src));
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
+
+DEF_SEM(STR_H_UpdateIndex, V16 src, MV16W dst, R64W dst_reg, ADDR next_addr) {
+  UWriteV16(dst, UReadV16(src));
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
+
+DEF_SEM(STR_S_UpdateIndex, V32 src, MV32W dst, R64W dst_reg, ADDR next_addr) {
+  FWriteV32(dst, FReadV32(src));
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
+
+DEF_SEM(STR_D_UpdateIndex, V64 src, MV64W dst, R64W dst_reg, ADDR next_addr) {
+  FWriteV64(dst, FReadV64(src));
+  Write(dst_reg, Read(next_addr));
+  return memory;
+}
 }  // namespace
 
 DEF_ISEL(STR_B_LDST_POS) = STR_B;
@@ -716,6 +773,16 @@ DEF_ISEL(STUR_Q_LDST_UNSCALED) = STR_Q;
 DEF_ISEL(STR_Q_LDST_REGOFF) = STR_Q_FromOffset;
 
 DEF_ISEL(STR_Q_LDST_IMMPRE) = STR_Q_UpdateIndex;
+
+DEF_ISEL(STR_B_LDST_IMMPRE) = STR_B_UpdateIndex;
+DEF_ISEL(STR_H_LDST_IMMPRE) = STR_H_UpdateIndex;
+DEF_ISEL(STR_S_LDST_IMMPRE) = STR_S_UpdateIndex;
+DEF_ISEL(STR_D_LDST_IMMPRE) = STR_D_UpdateIndex;
+DEF_ISEL(STR_B_LDST_IMMPOST) = STR_B_UpdateIndex;
+DEF_ISEL(STR_H_LDST_IMMPOST) = STR_H_UpdateIndex;
+DEF_ISEL(STR_S_LDST_IMMPOST) = STR_S_UpdateIndex;
+DEF_ISEL(STR_D_LDST_IMMPOST) = STR_D_UpdateIndex;
+DEF_ISEL(STR_Q_LDST_IMMPOST) = STR_Q_UpdateIndex;
 
 namespace {
 
@@ -1270,6 +1337,61 @@ DEF_ISEL(INS_ASIMDINS_IR_R_B) = INS_8<R32>;
 DEF_ISEL(INS_ASIMDINS_IR_R_H) = INS_16<R32>;
 DEF_ISEL(INS_ASIMDINS_IR_R_S) = INS_32<R32>;
 DEF_ISEL(INS_ASIMDINS_IR_R_D) = INS_64<R64>;
+
+namespace {
+
+// Element to element (MOV <Vd>.<Ts>[<i1>], <Vn>.<Ts>[<i2>]), element to all
+// lanes (DUP), and element to scalar register (MOV <V><d>, <Vn>.<T>[<i>]).
+#define ELEMENT_MOVES(size) \
+  DEF_SEM(INS_ELEM_##size, V128W dst, I64 dst_idx, V128 src, I64 src_idx) { \
+    auto vec = UReadV##size(dst); \
+    auto val = UExtractV##size(UReadV##size(src), Read(src_idx)); \
+    UWriteV##size(dst, UInsertV##size(vec, Read(dst_idx), val)); \
+    return memory; \
+  } \
+\
+  template <typename V> \
+  DEF_SEM(DUP_ELEM_##size, V128W dst, V128 src, I64 idx) { \
+    auto val = UExtractV##size(UReadV##size(src), Read(idx)); \
+    V vec = {}; \
+    _Pragma("unroll") for (auto &element : vec.elems) { \
+      element = val; \
+    } \
+    UWriteV##size(dst, vec); \
+    return memory; \
+  } \
+\
+  DEF_SEM(DUP_SCALAR_##size, V128W dst, V128 src, I64 idx) { \
+    UWriteV##size(dst, UExtractV##size(UReadV##size(src), Read(idx))); \
+    return memory; \
+  }
+
+ELEMENT_MOVES(8)
+ELEMENT_MOVES(16)
+ELEMENT_MOVES(32)
+ELEMENT_MOVES(64)
+
+#undef ELEMENT_MOVES
+
+}  // namespace
+
+DEF_ISEL(INS_ASIMDINS_IV_V_B) = INS_ELEM_8;
+DEF_ISEL(INS_ASIMDINS_IV_V_H) = INS_ELEM_16;
+DEF_ISEL(INS_ASIMDINS_IV_V_S) = INS_ELEM_32;
+DEF_ISEL(INS_ASIMDINS_IV_V_D) = INS_ELEM_64;
+
+DEF_ISEL(DUP_ASIMDINS_DV_V_8B) = DUP_ELEM_8<uint8v8_t>;
+DEF_ISEL(DUP_ASIMDINS_DV_V_16B) = DUP_ELEM_8<uint8v16_t>;
+DEF_ISEL(DUP_ASIMDINS_DV_V_4H) = DUP_ELEM_16<uint16v4_t>;
+DEF_ISEL(DUP_ASIMDINS_DV_V_8H) = DUP_ELEM_16<uint16v8_t>;
+DEF_ISEL(DUP_ASIMDINS_DV_V_2S) = DUP_ELEM_32<uint32v2_t>;
+DEF_ISEL(DUP_ASIMDINS_DV_V_4S) = DUP_ELEM_32<uint32v4_t>;
+DEF_ISEL(DUP_ASIMDINS_DV_V_2D) = DUP_ELEM_64<uint64v2_t>;
+
+DEF_ISEL(DUP_ASISDONE_ONLY_B) = DUP_SCALAR_8;
+DEF_ISEL(DUP_ASISDONE_ONLY_H) = DUP_SCALAR_16;
+DEF_ISEL(DUP_ASISDONE_ONLY_S) = DUP_SCALAR_32;
+DEF_ISEL(DUP_ASISDONE_ONLY_D) = DUP_SCALAR_64;
 
 namespace {
 

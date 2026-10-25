@@ -470,6 +470,111 @@ DEF_ISEL(FMADD_D_FLOATDP3) = FMADD_D;
 DEF_ISEL(FDIV_S_FLOATDP2) = FDIV_Scalar32;
 DEF_ISEL(FDIV_D_FLOATDP2) = FDIV_Scalar64;
 
+namespace {
+
+// Vector forms: each lane goes through CheckedFloatBinOp, so FPSR's cumulative
+// exception bits collect the exceptions of every lane, as on hardware.
+#define MAKE_FP_VECTOR_OP(name, op, size) \
+  template <typename S, typename V> \
+  DEF_SEM(name##_V##size, V128W dst, S src1, S src2) { \
+    auto vec1 = FReadV##size(src1); \
+    auto vec2 = FReadV##size(src2); \
+    V res = {}; \
+    _Pragma("unroll") for (size_t i = 0; i < NumVectorElems(res); ++i) { \
+      res.elems[i] = CheckedFloatBinOp(state, op##size, \
+                                       FExtractV##size(vec1, i), \
+                                       FExtractV##size(vec2, i)); \
+    } \
+    FWriteV##size(dst, res); \
+    return memory; \
+  }
+
+// FADDP: adds adjacent pairs of the concatenation Vm:Vn, Vn's pairs first.
+#define MAKE_FP_PAIRWISE_OP(name, op, size) \
+  template <typename S, typename V> \
+  DEF_SEM(name##_V##size, V128W dst, S src1, S src2) { \
+    auto vec1 = FReadV##size(src1); \
+    auto vec2 = FReadV##size(src2); \
+    V res = {}; \
+    const size_t half = NumVectorElems(res) / 2; \
+    _Pragma("unroll") for (size_t i = 0; i < half; ++i) { \
+      res.elems[i] = CheckedFloatBinOp(state, op##size, \
+                                       FExtractV##size(vec1, 2 * i), \
+                                       FExtractV##size(vec1, 2 * i + 1)); \
+      res.elems[half + i] = CheckedFloatBinOp( \
+          state, op##size, FExtractV##size(vec2, 2 * i), \
+          FExtractV##size(vec2, 2 * i + 1)); \
+    } \
+    FWriteV##size(dst, res); \
+    return memory; \
+  }
+
+MAKE_FP_VECTOR_OP(FADD, FAdd, 32)
+MAKE_FP_VECTOR_OP(FADD, FAdd, 64)
+MAKE_FP_VECTOR_OP(FSUB, FSub, 32)
+MAKE_FP_VECTOR_OP(FSUB, FSub, 64)
+MAKE_FP_VECTOR_OP(FMUL, FMul, 32)
+MAKE_FP_VECTOR_OP(FMUL, FMul, 64)
+MAKE_FP_VECTOR_OP(FDIV, FDiv, 32)
+MAKE_FP_VECTOR_OP(FDIV, FDiv, 64)
+MAKE_FP_PAIRWISE_OP(FADDP, FAdd, 32)
+MAKE_FP_PAIRWISE_OP(FADDP, FAdd, 64)
+
+#undef MAKE_FP_VECTOR_OP
+#undef MAKE_FP_PAIRWISE_OP
+
+// FMUL by element: every lane of Vn times one lane of Vm.
+#define MAKE_FMUL_ELEM(size) \
+  template <typename S, typename V> \
+  DEF_SEM(FMUL_ELEM_V##size, V128W dst, S src1, V128 src2, I64 idx) { \
+    auto vec1 = FReadV##size(src1); \
+    auto elem = FExtractV##size(FReadV##size(src2), Read(idx)); \
+    V res = {}; \
+    _Pragma("unroll") for (size_t i = 0; i < NumVectorElems(res); ++i) { \
+      res.elems[i] = CheckedFloatBinOp(state, FMul##size, \
+                                       FExtractV##size(vec1, i), elem); \
+    } \
+    FWriteV##size(dst, res); \
+    return memory; \
+  } \
+\
+  DEF_SEM(FMUL_ELEM_SCALAR##size, V128W dst, V##size src1, V128 src2, \
+          I64 idx) { \
+    auto val = FExtractV##size(FReadV##size(src1), 0); \
+    auto elem = FExtractV##size(FReadV##size(src2), Read(idx)); \
+    FWriteV##size(dst, CheckedFloatBinOp(state, FMul##size, val, elem)); \
+    return memory; \
+  }
+
+MAKE_FMUL_ELEM(32)
+MAKE_FMUL_ELEM(64)
+
+#undef MAKE_FMUL_ELEM
+
+}  // namespace
+
+DEF_ISEL(FADD_ASIMDSAME_ONLY_2S) = FADD_V32<V64, float32v2_t>;
+DEF_ISEL(FADD_ASIMDSAME_ONLY_4S) = FADD_V32<V128, float32v4_t>;
+DEF_ISEL(FADD_ASIMDSAME_ONLY_2D) = FADD_V64<V128, float64v2_t>;
+DEF_ISEL(FSUB_ASIMDSAME_ONLY_2S) = FSUB_V32<V64, float32v2_t>;
+DEF_ISEL(FSUB_ASIMDSAME_ONLY_4S) = FSUB_V32<V128, float32v4_t>;
+DEF_ISEL(FSUB_ASIMDSAME_ONLY_2D) = FSUB_V64<V128, float64v2_t>;
+DEF_ISEL(FMUL_ASIMDSAME_ONLY_2S) = FMUL_V32<V64, float32v2_t>;
+DEF_ISEL(FMUL_ASIMDSAME_ONLY_4S) = FMUL_V32<V128, float32v4_t>;
+DEF_ISEL(FMUL_ASIMDSAME_ONLY_2D) = FMUL_V64<V128, float64v2_t>;
+DEF_ISEL(FDIV_ASIMDSAME_ONLY_2S) = FDIV_V32<V64, float32v2_t>;
+DEF_ISEL(FDIV_ASIMDSAME_ONLY_4S) = FDIV_V32<V128, float32v4_t>;
+DEF_ISEL(FDIV_ASIMDSAME_ONLY_2D) = FDIV_V64<V128, float64v2_t>;
+DEF_ISEL(FADDP_ASIMDSAME_ONLY_2S) = FADDP_V32<V64, float32v2_t>;
+DEF_ISEL(FADDP_ASIMDSAME_ONLY_4S) = FADDP_V32<V128, float32v4_t>;
+DEF_ISEL(FADDP_ASIMDSAME_ONLY_2D) = FADDP_V64<V128, float64v2_t>;
+
+DEF_ISEL(FMUL_ASIMDELEM_R_SD_2S) = FMUL_ELEM_V32<V64, float32v2_t>;
+DEF_ISEL(FMUL_ASIMDELEM_R_SD_4S) = FMUL_ELEM_V32<V128, float32v4_t>;
+DEF_ISEL(FMUL_ASIMDELEM_R_SD_2D) = FMUL_ELEM_V64<V128, float64v2_t>;
+DEF_ISEL(FMUL_ASISDELEM_R_SD_S) = FMUL_ELEM_SCALAR32;
+DEF_ISEL(FMUL_ASISDELEM_R_SD_D) = FMUL_ELEM_SCALAR64;
+
 DEF_ISEL(FABS_S_FLOATDP1) = FABS_S;
 DEF_ISEL(FABS_D_FLOATDP1) = FABS_D;
 

@@ -48,6 +48,30 @@ DEF_COND_ISEL(CSEL_64_CONDSEL, CSEL, R64W, R64, R64)
 
 namespace {
 
+// Selects the raw bits, so NaN payloads pass through unchanged.
+template <bool (*check_cond)(const State &), typename S>
+DEF_SEM(FCSEL_32, V128W dst, S src1, S src2) {
+  auto val = check_cond(state) ? UExtractV32(UReadV32(src1), 0)
+                               : UExtractV32(UReadV32(src2), 0);
+  UWriteV32(dst, val);
+  return memory;
+}
+
+template <bool (*check_cond)(const State &), typename S>
+DEF_SEM(FCSEL_64, V128W dst, S src1, S src2) {
+  auto val = check_cond(state) ? UExtractV64(UReadV64(src1), 0)
+                               : UExtractV64(UReadV64(src2), 0);
+  UWriteV64(dst, val);
+  return memory;
+}
+
+}  // namespace
+
+DEF_COND_ISEL(FCSEL_S_FLOATSEL, FCSEL_32, V32)
+DEF_COND_ISEL(FCSEL_D_FLOATSEL, FCSEL_64, V64)
+
+namespace {
+
 template <bool (*check_cond)(const State &), typename D, typename S1,
           typename S2>
 DEF_SEM(CSNEG, D dst, S1 src1, S2 src2) {
