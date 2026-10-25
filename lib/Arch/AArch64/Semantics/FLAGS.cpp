@@ -167,6 +167,14 @@ ALWAYS_INLINE static void SetFPSRStatusFlags(State &state, int mask) {
   state.sr.idc |= static_cast<uint8_t>(0 != (mask & kFPUExceptionDenormal));
 }
 
+// LLVM treats floating-point arithmetic as free of side effects, so the
+// memory barriers alone do not keep it between the clear and the test of the
+// exception flags: it was hoisted or sunk out of the window (FADDP lost every
+// flag, FDIV by zero lost DZC). Passing the operands and the result through
+// volatile locals pins the operation inside the window, because volatile
+// accesses cannot cross the barriers and the operation depends on them. Unlike
+// an asm register constraint, this works for any target the lifted code is
+// compiled for.
 template <typename F, typename T>
 ALWAYS_INLINE static auto CheckedFloatUnaryOp(State &state, F func, T arg1)
     -> decltype(func(arg1)) {
@@ -175,7 +183,8 @@ ALWAYS_INLINE static auto CheckedFloatUnaryOp(State &state, F func, T arg1)
   //state.sr.idc |= IsDenormal(arg1);
   __remill_fpu_exception_clear(kFPUExceptionAll);
   BarrierReorder();
-  auto res = func(arg1);
+  volatile T in1 = arg1;
+  volatile decltype(func(arg1)) res = func(in1);
   BarrierReorder();
   auto new_except = __remill_fpu_exception_test(kFPUExceptionAll);
   SetFPSRStatusFlags(state, new_except);
@@ -191,7 +200,8 @@ ALWAYS_INLINE static auto CheckedFloatBinOp(State &state, F func, T arg1,
   //state.sr.idc |= IsDenormal(arg1) | IsDenormal(arg2);
   __remill_fpu_exception_clear(kFPUExceptionAll);
   BarrierReorder();
-  auto res = func(arg1, arg2);
+  volatile T in1 = arg1, in2 = arg2;
+  volatile decltype(func(arg1, arg2)) res = func(in1, in2);
   BarrierReorder();
   auto new_except = __remill_fpu_exception_test(kFPUExceptionAll);
   SetFPSRStatusFlags(state, new_except);
