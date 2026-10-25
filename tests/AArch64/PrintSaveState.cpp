@@ -105,6 +105,10 @@ int main(void) {
   printf("ubfx x29, x1, #0, #1\n");
   printf("strb w29, [x28, #%lu]\n", offsetof(State, sr.ioc));
 
+  // Save the cumulative divide by zero flag from the FPSR into the SR.
+  printf("ubfx x29, x1, #1, #1\n");
+  printf("strb w29, [x28, #%lu]\n", offsetof(State, sr.dzc));
+
   // Save the cumulative overflow flag from the FPSR into the SR.
   printf("ubfx x29, x1, #2, #1\n");
   printf("strb w29, [x28, #%lu]\n", offsetof(State, sr.ofc));

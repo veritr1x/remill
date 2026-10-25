@@ -54,6 +54,10 @@ int main(void) {
   printf("ldrb w2, [x28, #%lu]\n", offsetof(State, sr.ioc));
   printf("bfi x1, x2, #0, #1\n");
 
+  // Extract the cumulative divide by zero flag from the SR into the FPSR.
+  printf("ldrb w2, [x28, #%lu]\n", offsetof(State, sr.dzc));
+  printf("bfi x1, x2, #1, #1\n");
+
   // Extract the cumulative overflow flag from the SR into the FPSR.
   printf("ldrb w2, [x28, #%lu]\n", offsetof(State, sr.ofc));
   printf("bfi x1, x2, #2, #1\n");
@@ -70,9 +74,12 @@ int main(void) {
   printf("ldrb w2, [x28, #%lu]\n", offsetof(State, sr.idc));
   printf("bfi x1, x2, #6, #1\n");
 
-  // Sync `fpsr` between native and lifted.
+  // Sync `fpsr` between native and lifted. This used to be written to FPCR,
+  // which put the cumulative flags into FPCR's control bits (with FEAT_AFP,
+  // bits 0-2 are FIZ, AH and NEP) and never restored FPSR. FPCR keeps the
+  // host's default, which is also what the lifted code runs under.
   printf("str x1, [x28, #%lu]\n", offsetof(State, fpsr));
-  printf("msr fpcr, x1\n");
+  printf("msr fpsr, x1\n");
 
   // User-space thread pointer register.
   printf("ldr x1, [x28, #%lu]\n", offsetof(State, sr.tpidr_el0));

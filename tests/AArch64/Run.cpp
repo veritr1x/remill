@@ -843,7 +843,9 @@ static void RunWithFlags(const test::TestInfo *info, NZCV flags,
 
     for (size_t i = 0; i < sizeof(State); ++i) {
       LOG_IF(ERROR, lifted_state_bytes[i] != native_state_bytes[i])
-          << "Bytes at offset " << i << " are different";
+          << "Bytes at offset " << i << " are different: lifted "
+          << static_cast<int>(lifted_state_bytes[i]) << ", native "
+          << static_cast<int>(native_state_bytes[i]);
     }
   }
 

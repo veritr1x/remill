@@ -15,6 +15,8 @@ ldr x1, [x28, #1080]
 ldr x1, [x28, #1088]
 ldrb w2, [x28, #1153]
 bfi x1, x2, #0, #1
+ldrb w2, [x28, #1155]
+bfi x1, x2, #1, #1
 ldrb w2, [x28, #1147]
 bfi x1, x2, #2, #1
 ldrb w2, [x28, #1149]
@@ -24,7 +26,7 @@ bfi x1, x2, #4, #1
 ldrb w2, [x28, #1151]
 bfi x1, x2, #6, #1
 str x1, [x28, #1088]
-msr fpcr, x1
+msr fpsr, x1
 ldr x1, [x28, #1112]
 msr tpidr_el0, x1
 add x1, x28, #16

@@ -36,6 +36,7 @@ DEF_SEM(DoMRS_RS_SYSTEM_FPSR, R64W dest) {
 
   //fpsr.idc = state.sr.idc;  // TODO(garret): fix the saving of the idc bit before reenabling (issue #188)
   fpsr.ioc = state.sr.ioc;
+  fpsr.dzc = state.sr.dzc;
   WriteZExt(dest, fpsr.flat);
   return memory;
 }
@@ -47,6 +48,7 @@ DEF_SEM(DoMSR_SR_SYSTEM_FPSR, R64 src) {
   fpsr._res1 = 0;
   state.fpsr = fpsr;
   state.sr.ioc = fpsr.ioc;
+  state.sr.dzc = fpsr.dzc;
   state.sr.ofc = fpsr.ofc;
   state.sr.ixc = fpsr.ixc;
   state.sr.ufc = fpsr.ufc;
