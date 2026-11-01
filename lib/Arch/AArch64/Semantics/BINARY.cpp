@@ -546,26 +546,32 @@ MAKE_FP_PAIRWISE_OP(FADDP, FAdd, 64)
 #undef MAKE_FP_VECTOR_OP
 #undef MAKE_FP_PAIRWISE_OP
 
-// FMUL by element: every lane of Vn times one lane of Vm.
+// Indexed FMUL only. A signed product-zero accumulator makes the exact fused
+// helper equivalent to multiply, including -0 for every rounding mode. This
+// reuses ARM NaN/FZ/DN/tininess rules without touching ordinary FMUL or FMADD.
 #define MAKE_FMUL_ELEM(size) \
   template <typename S, typename V> \
   DEF_SEM(FMUL_ELEM_V##size, V128W dst, S src1, V128 src2, I64 idx) { \
-    auto vec1 = FReadV##size(src1); \
-    auto elem = FExtractV##size(FReadV##size(src2), Read(idx)); \
-    V res = {}; \
-    _Pragma("unroll") for (size_t i = 0; i < NumVectorElems(res); ++i) { \
-      res.elems[i] = CheckedFloatBinOp(state, FMul##size, \
-                                       FExtractV##size(vec1, i), elem); \
+    const auto vec1 = UReadV##size(src1); \
+    const auto elem = UReadV##size(src2).elems[Read(idx)]; \
+    constexpr uint##size##_t sign = uint##size##_t(1) << (size - 1); \
+    auto res = UClearV##size(UReadV##size(dst)); \
+    _Pragma("unroll") for (size_t i = 0; i < NumVectorElems(V{}); ++i) { \
+      const auto lhs = vec1.elems[i]; \
+      res.elems[i] = IndexedFusedFPBits<uint##size##_t>(state, (lhs ^ elem) & sign, lhs, elem); \
     } \
-    FWriteV##size(dst, res); \
+    UWriteV##size(dst, res); \
     return memory; \
   } \
 \
   DEF_SEM(FMUL_ELEM_SCALAR##size, V128W dst, V##size src1, V128 src2, \
           I64 idx) { \
-    auto val = FExtractV##size(FReadV##size(src1), 0); \
-    auto elem = FExtractV##size(FReadV##size(src2), Read(idx)); \
-    FWriteV##size(dst, CheckedFloatBinOp(state, FMul##size, val, elem)); \
+    const auto val = UReadV##size(src1).elems[0]; \
+    const auto elem = UReadV##size(src2).elems[Read(idx)]; \
+    constexpr uint##size##_t sign = uint##size##_t(1) << (size - 1); \
+    auto res = UClearV##size(UReadV##size(dst)); \
+    res.elems[0] = IndexedFusedFPBits<uint##size##_t>(state, (val ^ elem) & sign, val, elem); \
+    UWriteV##size(dst, res); \
     return memory; \
   }
 
