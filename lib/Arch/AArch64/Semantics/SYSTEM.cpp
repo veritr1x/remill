@@ -34,7 +34,7 @@ DEF_SEM(DoMRS_RS_SYSTEM_FPSR, R64W dest) {
   fpsr.ofc = state.sr.ofc;
   fpsr.ufc = state.sr.ufc;
 
-  //fpsr.idc = state.sr.idc;  // TODO(garret): fix the saving of the idc bit before reenabling (issue #188)
+  fpsr.idc = state.sr.idc;
   fpsr.ioc = state.sr.ioc;
   fpsr.dzc = state.sr.dzc;
   WriteZExt(dest, fpsr.flat);
@@ -53,7 +53,7 @@ DEF_SEM(DoMSR_SR_SYSTEM_FPSR, R64 src) {
   state.sr.ixc = fpsr.ixc;
   state.sr.ufc = fpsr.ufc;
 
-  //state.sr.idc = fpsr.idc;  // TODO(garret): fix the saving of the idc bit before reenabling (issue #188)
+  state.sr.idc = fpsr.idc;
   return memory;
 }
 
@@ -69,6 +69,7 @@ DEF_SEM(DoMSR_SR_SYSTEM_FPCR, R64 src) {
   fpcr._res0 = 0;
   fpcr._res1 = 0;
   state.fpcr = fpcr;
+  __remill_fpu_set_rounding(static_cast<int32_t>(fpcr.rmode));
   return memory;
 }
 

@@ -483,9 +483,6 @@ bool TryDecodeFADDP_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FABS  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFABS_ASIMDMISCFP16_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FABS FABS_asimdmisc_R:
 //   0 x Rd       0
@@ -521,9 +518,6 @@ bool TryDecodeFABS_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FABS  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFABS_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SCVTF SCVTF_asisdshf_C:
 //   0 x Rd       0
@@ -901,9 +895,6 @@ bool TryDecodeLSR_LSRV_64_DP_2SRC(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCVTN{2}  <Vd>.<Tb>, <Vn>.<Ta>
-bool TryDecodeFCVTN_ASIMDMISC_N(const InstData &, Instruction &) {
-  return false;
-}
 
 // CSNEG CNEG_CSNEG_32_condsel:
 //   0 x Rd       0
@@ -1129,9 +1120,6 @@ bool TryDecodeFMAX_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FMAX  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFMAX_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMIN FMIN_H_floatdp2:
 //   0 x Rd       0
@@ -1205,9 +1193,6 @@ bool TryDecodeFMIN_H_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMIN  <Sd>, <Sn>, <Sm>
-bool TryDecodeFMIN_S_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMIN FMIN_D_floatdp2:
 //   0 x Rd       0
@@ -1243,9 +1228,6 @@ bool TryDecodeFMIN_S_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMIN  <Dd>, <Dn>, <Dm>
-bool TryDecodeFMIN_D_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
 
 // UMLSL UMLSL_asimdelem_L:
 //   0 x Rd       0
@@ -1813,9 +1795,6 @@ bool TryDecodeFSQRT_H_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FSQRT  <Sd>, <Sn>
-bool TryDecodeFSQRT_S_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
 
 // FSQRT FSQRT_D_floatdp1:
 //   0 x Rd       0
@@ -1851,9 +1830,6 @@ bool TryDecodeFSQRT_S_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FSQRT  <Dd>, <Dn>
-bool TryDecodeFSQRT_D_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDEORA LDEORA_32_memop:
 //   0 x Rt       0
@@ -3105,9 +3081,6 @@ bool TryDecodeFRINTA_ASIMDMISC_R(const InstData &, Instruction &) {
 //  30 0 sz       0
 //  31 1
 // STXP  <Ws>, <Wt1>, <Wt2>, [<Xn|SP>{,#0}]
-bool TryDecodeSTXP_SP32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STXP STXP_SP64_ldstexcl:
 //   0 x Rt       0
@@ -3143,9 +3116,6 @@ bool TryDecodeSTXP_SP32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 1 sz       0
 //  31 1
 // STXP  <Ws>, <Xt1>, <Xt2>, [<Xn|SP>{,#0}]
-bool TryDecodeSTXP_SP64_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // SBFM SBFX_SBFM_32M_bitfield:
 //   0 x Rd       0
@@ -3257,9 +3227,6 @@ bool TryDecodeSBFX_SBFM_64M_BITFIELD(const InstData &, Instruction &) {
 //  30 0 sz       0
 //  31 1
 // LDXP  <Wt1>, <Wt2>, [<Xn|SP>{,#0}]
-bool TryDecodeLDXP_LP32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDXP LDXP_LP64_ldstexcl:
 //   0 x Rt       0
@@ -3295,9 +3262,6 @@ bool TryDecodeLDXP_LP32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 1 sz       0
 //  31 1
 // LDXP  <Xt1>, <Xt2>, [<Xn|SP>{,#0}]
-bool TryDecodeLDXP_LP64_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // UCVTF UCVTF_asisdmiscfp16_R:
 //   0 x Rd       0
@@ -3371,9 +3335,6 @@ bool TryDecodeUCVTF_ASISDMISCFP16_R(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // UCVTF  <V><d>, <V><n>
-bool TryDecodeUCVTF_ASISDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // UCVTF UCVTF_asimdmiscfp16_R:
 //   0 x Rd       0
@@ -3447,9 +3408,6 @@ bool TryDecodeUCVTF_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // UCVTF  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeUCVTF_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQDMULH SQDMULH_asisdsame_only:
 //   0 x Rd       0
@@ -3561,9 +3519,6 @@ bool TryDecodeSQDMULH_ASIMDSAME_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCVTL{2}  <Vd>.<Ta>, <Vn>.<Tb>
-bool TryDecodeFCVTL_ASIMDMISC_L(const InstData &, Instruction &) {
-  return false;
-}
 
 // YIELD YIELD_HI_system:
 //   0 1 Rt       0
@@ -3903,9 +3858,6 @@ bool TryDecodeUSRA_ASIMDSHF_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // MLS  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeMLS_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // ST1 ST1_asisdlse_R3_3v:
 //   0 x Rt       0
@@ -4929,9 +4881,6 @@ bool TryDecodeAESE_B_CRYPTOAES(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 1 size     1
 // STXR  <Ws>, <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTXR_SR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STXR STXR_SR64_ldstexcl:
 //   0 x Rt       0
@@ -4967,9 +4916,6 @@ bool TryDecodeSTXR_SR32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 1 size     1
 // STXR  <Ws>, <Xt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTXR_SR64_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // CMLT CMLT_asisdmisc_Z:
 //   0 x Rd       0
@@ -5081,9 +5027,6 @@ bool TryDecodeFCMEQ_ASISDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMEQ  <V><d>, <V><n>, <V><m>
-bool TryDecodeFCMEQ_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMEQ FCMEQ_asimdsamefp16_only:
 //   0 x Rd       0
@@ -5157,9 +5100,6 @@ bool TryDecodeFCMEQ_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMEQ  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFCMEQ_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // CLREX CLREX_BN_system:
 //   0 1 Rt       0
@@ -5195,9 +5135,6 @@ bool TryDecodeFCMEQ_ASIMDSAME_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 1
 // CLREX  {#<imm>}
-bool TryDecodeCLREX_BN_SYSTEM(const InstData &, Instruction &) {
-  return false;
-}
 
 // FSUB FSUB_asimdsamefp16_only:
 //   0 x Rd       0
@@ -6181,9 +6118,6 @@ bool TryDecodeTST_ANDS_64S_LOG_IMM(const InstData &, Instruction &) {
 //  30 0 sz       0
 //  31 1
 // STLXP  <Ws>, <Wt1>, <Wt2>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLXP_SP32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STLXP STLXP_SP64_ldstexcl:
 //   0 x Rt       0
@@ -6219,9 +6153,6 @@ bool TryDecodeSTLXP_SP32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 1 sz       0
 //  31 1
 // STLXP  <Ws>, <Xt1>, <Xt2>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLXP_SP64_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQRSHL SQRSHL_asisdsame_only:
 //   0 x Rd       0
@@ -7131,9 +7062,6 @@ bool TryDecodeFCMGE_ASISDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMGE  <V><d>, <V><n>, #0.0
-bool TryDecodeFCMGE_ASISDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMGE FCMGE_asimdmiscfp16_FZ:
 //   0 x Rd       0
@@ -7207,9 +7135,6 @@ bool TryDecodeFCMGE_ASIMDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMGE  <Vd>.<T>, <Vn>.<T>, #0.0
-bool TryDecodeFCMGE_ASIMDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // STLLRB STLLRB_SL32_ldstexcl:
 //   0 x Rt       0
@@ -7359,9 +7284,6 @@ bool TryDecodeFRINTZ_ASIMDMISC_R(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 0 size     1
 // STXRH  <Ws>, <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTXRH_SR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STEORH STEORH_32S_memop:
 //   0 1 Rt       0
@@ -7967,9 +7889,6 @@ bool TryDecodeSQDMULL_ASIMDELEM_L(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.B }[<index>], [<Xn|SP>]
-bool TryDecodeLD1_ASISDLSO_B1_1B(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlso_H1_1h:
 //   0 x Rt       0
@@ -8005,9 +7924,6 @@ bool TryDecodeLD1_ASISDLSO_B1_1B(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.H }[<index>], [<Xn|SP>]
-bool TryDecodeLD1_ASISDLSO_H1_1H(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlso_S1_1s:
 //   0 x Rt       0
@@ -8043,9 +7959,6 @@ bool TryDecodeLD1_ASISDLSO_H1_1H(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.S }[<index>], [<Xn|SP>]
-bool TryDecodeLD1_ASISDLSO_S1_1S(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlso_D1_1d:
 //   0 x Rt       0
@@ -8081,9 +7994,6 @@ bool TryDecodeLD1_ASISDLSO_S1_1S(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.D }[<index>], [<Xn|SP>]
-bool TryDecodeLD1_ASISDLSO_D1_1D(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_B1_i1b:
 //   0 x Rt       0
@@ -8119,9 +8029,6 @@ bool TryDecodeLD1_ASISDLSO_D1_1D(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.B }[<index>], [<Xn|SP>], #1
-bool TryDecodeLD1_ASISDLSOP_B1_I1B(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_BX1_r1b:
 //   0 x Rt       0
@@ -8157,9 +8064,6 @@ bool TryDecodeLD1_ASISDLSOP_B1_I1B(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.B }[<index>], [<Xn|SP>], <Xm>
-bool TryDecodeLD1_ASISDLSOP_BX1_R1B(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_H1_i1h:
 //   0 x Rt       0
@@ -8195,9 +8099,6 @@ bool TryDecodeLD1_ASISDLSOP_BX1_R1B(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.H }[<index>], [<Xn|SP>], #2
-bool TryDecodeLD1_ASISDLSOP_H1_I1H(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_HX1_r1h:
 //   0 x Rt       0
@@ -8233,9 +8134,6 @@ bool TryDecodeLD1_ASISDLSOP_H1_I1H(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.H }[<index>], [<Xn|SP>], <Xm>
-bool TryDecodeLD1_ASISDLSOP_HX1_R1H(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_S1_i1s:
 //   0 x Rt       0
@@ -8271,9 +8169,6 @@ bool TryDecodeLD1_ASISDLSOP_HX1_R1H(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.S }[<index>], [<Xn|SP>], #4
-bool TryDecodeLD1_ASISDLSOP_S1_I1S(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_SX1_r1s:
 //   0 x Rt       0
@@ -8309,9 +8204,6 @@ bool TryDecodeLD1_ASISDLSOP_S1_I1S(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.S }[<index>], [<Xn|SP>], <Xm>
-bool TryDecodeLD1_ASISDLSOP_SX1_R1S(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_D1_i1d:
 //   0 x Rt       0
@@ -8347,9 +8239,6 @@ bool TryDecodeLD1_ASISDLSOP_SX1_R1S(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.D }[<index>], [<Xn|SP>], #8
-bool TryDecodeLD1_ASISDLSOP_D1_I1D(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1 LD1_asisdlsop_DX1_r1d:
 //   0 x Rt       0
@@ -8385,9 +8274,6 @@ bool TryDecodeLD1_ASISDLSOP_D1_I1D(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1  { <Vt>.D }[<index>], [<Xn|SP>], <Xm>
-bool TryDecodeLD1_ASISDLSOP_DX1_R1D(const InstData &, Instruction &) {
-  return false;
-}
 
 // CCMN CCMN_32_condcmp_reg:
 //   0 x nzcv     0
@@ -8727,9 +8613,6 @@ bool TryDecodeFCMGT_ASISDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMGT  <V><d>, <V><n>, <V><m>
-bool TryDecodeFCMGT_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMGT FCMGT_asimdsamefp16_only:
 //   0 x Rd       0
@@ -8803,9 +8686,6 @@ bool TryDecodeFCMGT_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMGT  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFCMGT_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // USUBW USUBW_asimddiff_W:
 //   0 x Rd       0
@@ -8917,9 +8797,6 @@ bool TryDecodeFSQRT_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FSQRT  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFSQRT_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // LSLV LSL_LSLV_32_dp_2src:
 //   0 x Rd       0
@@ -9259,9 +9136,6 @@ bool TryDecodeBFXIL_BFM_64M_BITFIELD(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ZIP1  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeZIP1_ASIMDPERM_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDSETAH LDSETAH_32_memop:
 //   0 x Rt       0
@@ -9905,9 +9779,6 @@ bool TryDecodeFMAX_H_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMAX  <Sd>, <Sn>, <Sm>
-bool TryDecodeFMAX_S_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMAX FMAX_D_floatdp2:
 //   0 x Rd       0
@@ -9943,9 +9814,6 @@ bool TryDecodeFMAX_S_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMAX  <Dd>, <Dn>, <Dm>
-bool TryDecodeFMAX_D_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
 
 // AESD AESD_B_cryptoaes:
 //   0 x Rd       0
@@ -10551,9 +10419,6 @@ bool TryDecodeFCVTZU_ASISDMISCFP16_R(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCVTZU  <V><d>, <V><n>
-bool TryDecodeFCVTZU_ASISDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTZU FCVTZU_asimdmiscfp16_R:
 //   0 x Rd       0
@@ -10627,9 +10492,6 @@ bool TryDecodeFCVTZU_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCVTZU  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFCVTZU_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // ORN MVN_ORN_32_log_shift:
 //   0 x Rd       0
@@ -10893,9 +10755,6 @@ bool TryDecodeSTEORL_64S_MEMOP(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBX  <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B }, <Vm>.<Ta>
-bool TryDecodeTBX_ASIMDTBL_L2_2(const InstData &, Instruction &) {
-  return false;
-}
 
 // TBX TBX_asimdtbl_L3_3:
 //   0 x Rd       0
@@ -10931,9 +10790,6 @@ bool TryDecodeTBX_ASIMDTBL_L2_2(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBX  <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B }, <Vm>.<Ta>
-bool TryDecodeTBX_ASIMDTBL_L3_3(const InstData &, Instruction &) {
-  return false;
-}
 
 // TBX TBX_asimdtbl_L4_4:
 //   0 x Rd       0
@@ -10969,9 +10825,6 @@ bool TryDecodeTBX_ASIMDTBL_L3_3(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBX  <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B, <Vn+3>.16B }, <Vm>.<Ta>
-bool TryDecodeTBX_ASIMDTBL_L4_4(const InstData &, Instruction &) {
-  return false;
-}
 
 // TBX TBX_asimdtbl_L1_1:
 //   0 x Rd       0
@@ -11007,9 +10860,6 @@ bool TryDecodeTBX_ASIMDTBL_L4_4(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBX  <Vd>.<Ta>, { <Vn>.16B }, <Vm>.<Ta>
-bool TryDecodeTBX_ASIMDTBL_L1_1(const InstData &, Instruction &) {
-  return false;
-}
 
 // UMLAL UMLAL_asimdelem_L:
 //   0 x Rd       0
@@ -13983,9 +13833,6 @@ bool TryDecodeLDUMINL_64_MEMOP(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // STXRB  <Ws>, <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTXRB_SR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STLXRH STLXRH_SR32_ldstexcl:
 //   0 x Rt       0
@@ -14021,9 +13868,6 @@ bool TryDecodeSTXRB_SR32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 0 size     1
 // STLXRH  <Ws>, <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLXRH_SR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STLLRH STLLRH_SL32_ldstexcl:
 //   0 x Rt       0
@@ -14857,9 +14701,6 @@ bool TryDecodeLDEORLH_32_MEMOP(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // XTN{2}  <Vd>.<Tb>, <Vn>.<Ta>
-bool TryDecodeXTN_ASIMDMISC_N(const InstData &, Instruction &) {
-  return false;
-}
 
 // USQADD USQADD_asisdmisc_R:
 //   0 x Rd       0
@@ -15427,9 +15268,6 @@ bool TryDecodeSHA1M_QSV_CRYPTOSHA3(const InstData &, Instruction &) {
 //  30 0 sz       0
 //  31 1
 // LDAXP  <Wt1>, <Wt2>, [<Xn|SP>{,#0}]
-bool TryDecodeLDAXP_LP32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDAXP LDAXP_LP64_ldstexcl:
 //   0 x Rt       0
@@ -15465,9 +15303,6 @@ bool TryDecodeLDAXP_LP32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 1 sz       0
 //  31 1
 // LDAXP  <Xt1>, <Xt2>, [<Xn|SP>{,#0}]
-bool TryDecodeLDAXP_LP64_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // CASPA CASPA_CP32_ldstexcl:
 //   0 x Rt       0
@@ -16073,9 +15908,6 @@ bool TryDecodeSHA1P_QSV_CRYPTOSHA3(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBL  <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B }, <Vm>.<Ta>
-bool TryDecodeTBL_ASIMDTBL_L2_2(const InstData &, Instruction &) {
-  return false;
-}
 
 // TBL TBL_asimdtbl_L3_3:
 //   0 x Rd       0
@@ -16111,9 +15943,6 @@ bool TryDecodeTBL_ASIMDTBL_L2_2(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBL  <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B }, <Vm>.<Ta>
-bool TryDecodeTBL_ASIMDTBL_L3_3(const InstData &, Instruction &) {
-  return false;
-}
 
 // TBL TBL_asimdtbl_L4_4:
 //   0 x Rd       0
@@ -16149,9 +15978,6 @@ bool TryDecodeTBL_ASIMDTBL_L3_3(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBL  <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B, <Vn+3>.16B }, <Vm>.<Ta>
-bool TryDecodeTBL_ASIMDTBL_L4_4(const InstData &, Instruction &) {
-  return false;
-}
 
 // TBL TBL_asimdtbl_L1_1:
 //   0 x Rd       0
@@ -16187,9 +16013,6 @@ bool TryDecodeTBL_ASIMDTBL_L4_4(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TBL  <Vd>.<Ta>, { <Vn>.16B }, <Vm>.<Ta>
-bool TryDecodeTBL_ASIMDTBL_L1_1(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMAXNMP FMAXNMP_asisdpair_only_H:
 //   0 x Rd       0
@@ -16339,9 +16162,6 @@ bool TryDecodeFNMUL_H_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FNMUL  <Sd>, <Sn>, <Sm>
-bool TryDecodeFNMUL_S_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
 
 // FNMUL FNMUL_D_floatdp2:
 //   0 x Rd       0
@@ -16377,9 +16197,6 @@ bool TryDecodeFNMUL_S_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FNMUL  <Dd>, <Dn>, <Dm>
-bool TryDecodeFNMUL_D_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQSUB SQSUB_asisdsame_only:
 //   0 x Rd       0
@@ -16643,9 +16460,6 @@ bool TryDecodeREV64_REV_64_DP_1SRC(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // STLXRB  <Ws>, <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLXRB_SR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STTRH STTRH_32_ldst_unpriv:
 //   0 x Rt       0
@@ -17324,9 +17138,6 @@ bool TryDecodeSCVTF_ASISDMISCFP16_R(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // SCVTF  <V><d>, <V><n>
-bool TryDecodeSCVTF_ASISDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SCVTF SCVTF_asimdmiscfp16_R:
 //   0 x Rd       0
@@ -17400,9 +17211,6 @@ bool TryDecodeSCVTF_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // SCVTF  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeSCVTF_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // UMULL UMULL_asimddiff_L:
 //   0 x Rd       0
@@ -17739,9 +17547,6 @@ bool TryDecodeSMULL_SMADDL_64WA_DP_3SRC(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ZIP2  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeZIP2_ASIMDPERM_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDAXRB LDAXRB_LR32_ldstexcl:
 //   0 x Rt       0
@@ -17777,9 +17582,6 @@ bool TryDecodeZIP2_ASIMDPERM_ONLY(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // LDAXRB  <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeLDAXRB_LR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // MSUB MNEG_MSUB_32A_dp_3src:
 //   0 x Rd       0
@@ -19183,9 +18985,6 @@ bool TryDecodeFRECPS_ASISDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FRECPS  <V><d>, <V><n>, <V><m>
-bool TryDecodeFRECPS_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRECPS FRECPS_asimdsamefp16_only:
 //   0 x Rd       0
@@ -19259,9 +19058,6 @@ bool TryDecodeFRECPS_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FRECPS  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFRECPS_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // SMLAL SMLAL_asimddiff_L:
 //   0 x Rd       0
@@ -20475,9 +20271,6 @@ bool TryDecodeFRSQRTS_ASISDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FRSQRTS  <V><d>, <V><n>, <V><m>
-bool TryDecodeFRSQRTS_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRSQRTS FRSQRTS_asimdsamefp16_only:
 //   0 x Rd       0
@@ -20551,9 +20344,6 @@ bool TryDecodeFRSQRTS_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FRSQRTS  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFRSQRTS_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRINTN FRINTN_H_floatdp1:
 //   0 x Rd       0
@@ -20779,9 +20569,6 @@ bool TryDecodeFCMLT_ASISDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMLT  <V><d>, <V><n>, #0.0
-bool TryDecodeFCMLT_ASISDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMLT FCMLT_asimdmiscfp16_FZ:
 //   0 x Rd       0
@@ -20855,9 +20642,6 @@ bool TryDecodeFCMLT_ASIMDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMLT  <Vd>.<T>, <Vn>.<T>, #0.0
-bool TryDecodeFCMLT_ASIMDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQRDMULH SQRDMULH_asisdsame_only:
 //   0 x Rd       0
@@ -21191,9 +20975,6 @@ bool TryDecodeSWPLH_32_MEMOP(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 0 size     1
 // STLRH  <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLRH_SL32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDUMAXA LDUMAXA_32_memop:
 //   0 x Rt       0
@@ -22287,9 +22068,6 @@ bool TryDecodeSQDMLAL_ASIMDELEM_L(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // SHL  <V><d>, <V><n>, #<shift>
-bool TryDecodeSHL_ASISDSHF_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SHL SHL_asimdshf_R:
 //   0 x Rd       0
@@ -22325,9 +22103,6 @@ bool TryDecodeSHL_ASISDSHF_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // SHL  <Vd>.<T>, <Vn>.<T>, #<shift>
-bool TryDecodeSHL_ASIMDSHF_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // STADDB STADDB_32S_memop:
 //   0 1 Rt       0
@@ -23389,9 +23164,6 @@ bool TryDecodeFCMLE_ASISDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMLE  <V><d>, <V><n>, #0.0
-bool TryDecodeFCMLE_ASISDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMLE FCMLE_asimdmiscfp16_FZ:
 //   0 x Rd       0
@@ -23465,9 +23237,6 @@ bool TryDecodeFCMLE_ASIMDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMLE  <Vd>.<T>, <Vn>.<T>, #0.0
-bool TryDecodeFCMLE_ASIMDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // DRPS DRPS_64E_branch_reg:
 //   0 0 op4      0
@@ -23617,9 +23386,6 @@ bool TryDecodeSLI_ASIMDSHF_R(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 0 size     1
 // LDAXRH  <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeLDAXRH_LR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // BFM BFI_BFM_32M_bitfield:
 //   0 x Rd       0
@@ -24719,9 +24485,6 @@ bool TryDecodeSWPLB_32_MEMOP(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FMOV  <Vd>.<T>, #<imm>
-bool TryDecodeFMOV_ASIMDIMM_H_H(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMOV FMOV_asimdimm_S_s:
 //   0 x Rd       0
@@ -24757,9 +24520,6 @@ bool TryDecodeFMOV_ASIMDIMM_H_H(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FMOV  <Vd>.<T>, #<imm>
-bool TryDecodeFMOV_ASIMDIMM_S_S(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMOV FMOV_asimdimm_D2_d:
 //   0 x Rd       0
@@ -24795,9 +24555,6 @@ bool TryDecodeFMOV_ASIMDIMM_S_S(const InstData &, Instruction &) {
 //  30 1 Q        0
 //  31 0
 // FMOV  <Vd>.2D, #<imm>
-bool TryDecodeFMOV_ASIMDIMM_D2_D(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMIN FMIN_asimdsamefp16_only:
 //   0 x Rd       0
@@ -24871,9 +24628,6 @@ bool TryDecodeFMIN_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FMIN  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFMIN_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQXTUN SQXTUN_asisdmisc_N:
 //   0 x Rd       0
@@ -25403,9 +25157,6 @@ bool TryDecodeLDLARB_LR32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FNEG  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFNEG_ASIMDMISCFP16_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FNEG FNEG_asimdmisc_R:
 //   0 x Rd       0
@@ -25441,9 +25192,6 @@ bool TryDecodeFNEG_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FNEG  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFNEG_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // ADDHN ADDHN_asimddiff_N:
 //   0 x Rd       0
@@ -25707,9 +25455,6 @@ bool TryDecodeCMGT_ASISDSAME_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST4  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T>, <Vt4>.<T> }, [<Xn|SP>]
-bool TryDecodeST4_ASISDLSE_R4(const InstData &, Instruction &) {
-  return false;
-}
 
 // ST4 ST4_asisdlsep_I4_i:
 //   0 x Rt       0
@@ -25745,9 +25490,6 @@ bool TryDecodeST4_ASISDLSE_R4(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST4  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T>, <Vt4>.<T> }, [<Xn|SP>], <imm>
-bool TryDecodeST4_ASISDLSEP_I4_I(const InstData &, Instruction &) {
-  return false;
-}
 
 // ST4 ST4_asisdlsep_R4_r:
 //   0 x Rt       0
@@ -25783,9 +25525,6 @@ bool TryDecodeST4_ASISDLSEP_I4_I(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST4  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T>, <Vt4>.<T> }, [<Xn|SP>], <Xm>
-bool TryDecodeST4_ASISDLSEP_R4_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // UHSUB UHSUB_asimdsame_only:
 //   0 x Rd       0
@@ -26917,9 +26656,6 @@ bool TryDecodeMOV_UMOV_ASIMDINS_X_X(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // MLS  <Vd>.<T>, <Vn>.<T>, <Vm>.<Ts>[<index>]
-bool TryDecodeMLS_ASIMDELEM_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQDMLSL SQDMLSL_asisdelem_L:
 //   0 x Rd       0
@@ -27792,9 +27528,6 @@ bool TryDecodeSTSETL_64S_MEMOP(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // MLA  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeMLA_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD3R LD3R_asisdlso_R3:
 //   0 x Rt       0
@@ -28477,9 +28210,6 @@ bool TryDecodeFCVTZS_ASISDMISCFP16_R(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCVTZS  <V><d>, <V><n>
-bool TryDecodeFCVTZS_ASISDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTZS FCVTZS_asimdmiscfp16_R:
 //   0 x Rd       0
@@ -28553,9 +28283,6 @@ bool TryDecodeFCVTZS_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCVTZS  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFCVTZS_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMAXNM FMAXNM_H_floatdp2:
 //   0 x Rd       0
@@ -28895,9 +28622,6 @@ bool TryDecodeLDTR_64_LDST_UNPRIV(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // UZP2  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeUZP2_ASIMDPERM_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQRDMLSH SQRDMLSH_asisdsame2_only:
 //   0 x Rd       0
@@ -29237,9 +28961,6 @@ bool TryDecodeFCMGE_ASISDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMGE  <V><d>, <V><n>, <V><m>
-bool TryDecodeFCMGE_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMGE FCMGE_asimdsamefp16_only:
 //   0 x Rd       0
@@ -29313,9 +29034,6 @@ bool TryDecodeFCMGE_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMGE  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFCMGE_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // NOT MVN_NOT_asimdmisc_R:
 //   0 x Rd       0
@@ -30035,9 +29753,6 @@ bool TryDecodeFCMGT_ASISDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMGT  <V><d>, <V><n>, #0.0
-bool TryDecodeFCMGT_ASISDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMGT FCMGT_asimdmiscfp16_FZ:
 //   0 x Rd       0
@@ -30111,9 +29826,6 @@ bool TryDecodeFCMGT_ASIMDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMGT  <Vd>.<T>, <Vn>.<T>, #0.0
-bool TryDecodeFCMGT_ASIMDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // UQSUB UQSUB_asisdsame_only:
 //   0 x Rd       0
@@ -30263,9 +29975,6 @@ bool TryDecodeWFI_HI_SYSTEM(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 0 size     1
 // LDXRH  <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeLDXRH_LR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STLRB STLRB_SL32_ldstexcl:
 //   0 x Rt       0
@@ -30301,9 +30010,6 @@ bool TryDecodeLDXRH_LR32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // STLRB  <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLRB_SL32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // ST3 ST3_asisdlse_R3:
 //   0 x Rt       0
@@ -30605,9 +30311,6 @@ bool TryDecodeFCMEQ_ASISDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FCMEQ  <V><d>, <V><n>, #0.0
-bool TryDecodeFCMEQ_ASISDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCMEQ FCMEQ_asimdmiscfp16_FZ:
 //   0 x Rd       0
@@ -30681,9 +30384,6 @@ bool TryDecodeFCMEQ_ASIMDMISCFP16_FZ(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FCMEQ  <Vd>.<T>, <Vn>.<T>, #0.0
-bool TryDecodeFCMEQ_ASIMDMISC_FZ(const InstData &, Instruction &) {
-  return false;
-}
 
 // FACGE FACGE_asisdsamefp16_only:
 //   0 x Rd       0
@@ -31631,9 +31331,6 @@ bool TryDecodeST1_ASISDLSOP_DX1_R1D(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // UZP1  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeUZP1_ASIMDPERM_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // MLA MLA_asimdelem_R:
 //   0 x Rd       0
@@ -31669,9 +31366,6 @@ bool TryDecodeUZP1_ASIMDPERM_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // MLA  <Vd>.<T>, <Vn>.<T>, <Vm>.<Ts>[<index>]
-bool TryDecodeMLA_ASIMDELEM_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTPU FCVTPU_32H_float2int:
 //   0 x Rd       0
@@ -33227,9 +32921,6 @@ bool TryDecodeFRINTI_ASIMDMISC_R(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // LDXRB  <Wt>, [<Xn|SP>{,#0}]
-bool TryDecodeLDXRB_LR32_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STP STP_S_ldstpair_post:
 //   0 x Rt       0
@@ -38817,9 +38508,6 @@ bool TryDecodeUQSHRN_ASIMDSHF_N(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // USHL  <V><d>, <V><n>, <V><m>
-bool TryDecodeUSHL_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // USHL USHL_asimdsame_only:
 //   0 x Rd       0
@@ -38855,9 +38543,6 @@ bool TryDecodeUSHL_ASISDSAME_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // USHL  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeUSHL_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FADDP FADDP_asisdpair_only_H:
 //   0 x Rd       0
@@ -39235,9 +38920,6 @@ bool TryDecodeUSHLL_ASIMDSHF_L(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 1 size     1
 // STLR  <Xt>, [<Xn|SP>{,#0}]
-bool TryDecodeSTLR_SL64_LDSTEXCL(const InstData &, Instruction &) {
-  return false;
-}
 
 // STSMAXB STSMAXB_32S_memop:
 //   0 1 Rt       0
@@ -40334,9 +40016,6 @@ bool TryDecodeFRECPE_ASIMDMISC_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1R  { <Vt>.<T> }, [<Xn|SP>]
-bool TryDecodeLD1R_ASISDLSO_R1(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1R LD1R_asisdlsop_R1_i:
 //   0 x Rt       0
@@ -40372,9 +40051,6 @@ bool TryDecodeLD1R_ASISDLSO_R1(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1R  { <Vt>.<T> }, [<Xn|SP>], <imm>
-bool TryDecodeLD1R_ASISDLSOP_R1_I(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1R LD1R_asisdlsop_RX1_r:
 //   0 x Rt       0
@@ -40410,9 +40086,6 @@ bool TryDecodeLD1R_ASISDLSOP_R1_I(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // LD1R  { <Vt>.<T> }, [<Xn|SP>], <Xm>
-bool TryDecodeLD1R_ASISDLSOP_RX1_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // MUL MUL_asimdelem_R:
 //   0 x Rd       0
@@ -40448,9 +40121,6 @@ bool TryDecodeLD1R_ASISDLSOP_RX1_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // MUL  <Vd>.<T>, <Vn>.<T>, <Vm>.<Ts>[<index>]
-bool TryDecodeMUL_ASIMDELEM_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FNEG FNEG_H_floatdp1:
 //   0 x Rd       0
@@ -40904,9 +40574,6 @@ bool TryDecodeFABD_ASISDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FABD  <V><d>, <V><n>, <V><m>
-bool TryDecodeFABD_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FABD FABD_asimdsamefp16_only:
 //   0 x Rd       0
@@ -40980,9 +40647,6 @@ bool TryDecodeFABD_ASIMDSAMEFP16_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FABD  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeFABD_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTNU FCVTNU_32H_float2int:
 //   0 x Rd       0
@@ -41246,9 +40910,6 @@ bool TryDecodeFCVTNU_64D_FLOAT2INT(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // MUL  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeMUL_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // CMTST CMTST_asisdsame_only:
 //   0 x Rd       0
@@ -42310,9 +41971,6 @@ bool TryDecodeFRINTN_ASIMDMISC_R(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // STR  <Bt>, [<Xn|SP>, (<Wm>|<Xm>), <extend> {<amount>}]
-bool TryDecodeSTR_B_LDST_REGOFF(const InstData &, Instruction &) {
-  return false;
-}
 
 // STR STR_BL_ldst_regoff:
 //   0 x Rt       0
@@ -42348,9 +42006,6 @@ bool TryDecodeSTR_B_LDST_REGOFF(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 0 size     1
 // STR  <Bt>, [<Xn|SP>, <Xm>{, LSL <amount>}]
-bool TryDecodeSTR_BL_LDST_REGOFF(const InstData &, Instruction &) {
-  return false;
-}
 
 // STR STR_H_ldst_regoff:
 //   0 x Rt       0
@@ -42386,9 +42041,6 @@ bool TryDecodeSTR_BL_LDST_REGOFF(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 0 size     1
 // STR  <Ht>, [<Xn|SP>, (<Wm>|<Xm>){, <extend> {<amount>}}]
-bool TryDecodeSTR_H_LDST_REGOFF(const InstData &, Instruction &) {
-  return false;
-}
 
 // STR STR_S_ldst_regoff:
 //   0 x Rt       0
@@ -42424,9 +42076,6 @@ bool TryDecodeSTR_H_LDST_REGOFF(const InstData &, Instruction &) {
 //  30 0 size     0
 //  31 1 size     1
 // STR  <St>, [<Xn|SP>, (<Wm>|<Xm>){, <extend> {<amount>}}]
-bool TryDecodeSTR_S_LDST_REGOFF(const InstData &, Instruction &) {
-  return false;
-}
 
 // STR STR_D_ldst_regoff:
 //   0 x Rt       0
@@ -42462,9 +42111,6 @@ bool TryDecodeSTR_S_LDST_REGOFF(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 1 size     1
 // STR  <Dt>, [<Xn|SP>, (<Wm>|<Xm>){, <extend> {<amount>}}]
-bool TryDecodeSTR_D_LDST_REGOFF(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDCLRAB LDCLRAB_32_memop:
 //   0 x Rt       0

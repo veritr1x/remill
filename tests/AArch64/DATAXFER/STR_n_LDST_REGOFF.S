@@ -108,3 +108,24 @@ TEST_INPUTS(
     str q0, [x3, ARG1_64, lsl #0]
     str q1, [x3, ARG1_64, lsl #4]
 TEST_END
+
+#define FP_STORE_REGISTER_OFFSET(kind, upper, r0, r1, r2, amount) \
+    TEST_BEGIN(CAT(STR_, CAT(upper, _LDST_REGOFF)), CAT(str_fp_reg_unsigned_, kind), 1) \
+    TEST_INPUTS(0, 3) \
+    add x3, sp, #-256 ; \
+    str r0, [x3, ARG1_32, uxtw] ; \
+    str r1, [x3, ARG1_32, uxtw amount] ; \
+    str r2, [x3, ARG1_64, lsl amount] ; \
+    TEST_END \
+    TEST_BEGIN(CAT(STR_, CAT(upper, _LDST_REGOFF)), CAT(str_fp_reg_signed_, kind), 1) \
+    TEST_INPUTS(0, 3, 0xfffffffffffffffd) \
+    add x3, sp, #-256 ; \
+    str r0, [x3, ARG1_32, sxtw] ; \
+    str r1, [x3, ARG1_32, sxtw amount] ; \
+    str r2, [x3, ARG1_64, sxtx amount] ; \
+    TEST_END
+FP_STORE_REGISTER_OFFSET(b, B, b5, b6, b7, #0)
+FP_STORE_REGISTER_OFFSET(h, H, h5, h6, h7, #1)
+FP_STORE_REGISTER_OFFSET(s, S, s5, s6, s7, #2)
+FP_STORE_REGISTER_OFFSET(d, D, d5, d6, d7, #3)
+#undef FP_STORE_REGISTER_OFFSET

@@ -433,16 +433,6 @@ static void AddImmOperand(Instruction &inst, uint64_t val,
   inst.operands.push_back(op);
 }
 
-static void AddMonitorOperand(Instruction &inst) {
-  Operand op;
-  op.action = Operand::kActionWrite;
-  op.reg.name = "MONITOR";
-  op.reg.size = 64;
-  op.size = 64;
-  op.type = Operand::kTypeRegister;
-  inst.operands.push_back(op);
-}
-
 static void AddPCRegOp(Instruction &inst, Operand::Action action, int64_t disp,
                        Operand::Address::Kind op_kind) {
   Operand op;
@@ -916,6 +906,24 @@ bool TryDecodeBLR_64_BRANCH_REG(const InstData &data, Instruction &inst) {
 bool TryDecodeSTLR_SL32_LDSTEXCL(const InstData &data, Instruction &inst) {
   AddRegOperand(inst, kActionRead, kRegW, kUseAsValue, data.Rt);
   AddBasePlusOffsetMemOp(inst, kActionWrite, 32, data.Rn, 0);
+  return true;
+}
+
+bool TryDecodeSTLR_SL64_LDSTEXCL(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionRead, kRegX, kUseAsValue, data.Rt);
+  AddBasePlusOffsetMemOp(inst, kActionWrite, 64, data.Rn, 0);
+  return true;
+}
+
+bool TryDecodeSTLRB_SL32_LDSTEXCL(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionRead, kRegW, kUseAsValue, data.Rt);
+  AddBasePlusOffsetMemOp(inst, kActionWrite, 8, data.Rn, 0);
+  return true;
+}
+
+bool TryDecodeSTLRH_SL32_LDSTEXCL(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionRead, kRegW, kUseAsValue, data.Rt);
+  AddBasePlusOffsetMemOp(inst, kActionWrite, 16, data.Rn, 0);
   return true;
 }
 
@@ -3301,6 +3309,22 @@ bool TryDecodeSTR_Q_LDST_REGOFF(const InstData &data, Instruction &inst) {
   return TryDecodeSTR_Vn_LDST_REGOFF(data, inst, kRegQ);
 }
 
+bool TryDecodeSTR_B_LDST_REGOFF(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_REGOFF(data, inst, kRegB);
+}
+bool TryDecodeSTR_BL_LDST_REGOFF(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_REGOFF(data, inst, kRegB);
+}
+bool TryDecodeSTR_H_LDST_REGOFF(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_REGOFF(data, inst, kRegH);
+}
+bool TryDecodeSTR_S_LDST_REGOFF(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_REGOFF(data, inst, kRegS);
+}
+bool TryDecodeSTR_D_LDST_REGOFF(const InstData &data, Instruction &inst) {
+  return TryDecodeSTR_Vn_LDST_REGOFF(data, inst, kRegD);
+}
+
 static bool TryDecodeSTR_Vn_LDST_IMMPRE(const InstData &data, Instruction &inst,
                                         RegClass val_class) {
   uint64_t scale = DecodeScale(data);
@@ -3796,19 +3820,21 @@ bool TryDecodeREV_64_DP_1SRC(const InstData &data, Instruction &inst) {
   return TryDecodeRdW_Rn(data, inst, kRegX);
 }
 
+static bool TryDecodeVectorREV(const InstData &data, Instruction &inst, uint64_t container_bits);
+
 // REV16  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeREV16_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeREV16_ASIMDMISC_R(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorREV(data, inst, 16);
 }
 
 // REV32  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeREV32_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeREV32_ASIMDMISC_R(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorREV(data, inst, 32);
 }
 
 // REV64  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeREV64_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeREV64_ASIMDMISC_R(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorREV(data, inst, 64);
 }
 
 static void AddQArrangementSpecifier(const InstData &data, Instruction &inst,
@@ -3930,7 +3956,7 @@ bool TryDecodeEXT_ASIMDEXT_ONLY(const InstData &data, Instruction &inst) {
 
 // Load/store one or more data structures.
 bool TryDecodeLDnSTn(const InstData &data, Instruction &inst,
-                     uint64_t *total_num_bytes) {
+                     uint64_t *total_num_bytes, Action action = kActionWrite) {
   uint64_t rpt = 0;
   uint64_t selem = 0;
   if (!TryDecodeLDnSTnOpcode(data.opcode, &rpt, &selem)) {
@@ -3950,7 +3976,7 @@ bool TryDecodeLDnSTn(const InstData &data, Instruction &inst,
   auto num_regs = static_cast<uint8_t>(rpt * selem);
   for (uint8_t i = 0; i < num_regs; ++i) {
     auto tt = static_cast<aarch64::RegNum>((t + i) % 32);
-    AddRegOperand(inst, kActionWrite, data.Q ? kRegQ : kRegD, kUseAsValue, tt);
+    AddRegOperand(inst, action, data.Q ? kRegQ : kRegD, kUseAsValue, tt);
   }
   return true;
 }
@@ -4696,13 +4722,211 @@ bool TryDecodeLD2_ASISDLSEP_R2_R(const InstData &data, Instruction &inst) {
 }
 
 // LD4  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T>, <Vt4>.<T> }, [<Xn|SP>], <imm>
-bool TryDecodeLD4_ASISDLSEP_I4_I(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeLD4_ASISDLSEP_I4_I(const InstData &data, Instruction &inst) {
+  return TryDecodeLD1_ASISDLSEP_I2_I2(data, inst);
 }
 
 // LD4  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T>, <Vt4>.<T> }, [<Xn|SP>], <Xm>
-bool TryDecodeLD4_ASISDLSEP_R4_R(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeLD4_ASISDLSEP_R4_R(const InstData &data, Instruction &inst) {
+  return TryDecodeLD2_ASISDLSEP_R2_R(data, inst);
+}
+
+bool TryDecodeST4_ASISDLSE_R4(const InstData &data, Instruction &inst) {
+  uint64_t bytes = 0;
+  if (!TryDecodeLDnSTn(data, inst, &bytes, kActionRead)) return false;
+  AddBasePlusOffsetMemOp(inst, kActionWrite, bytes * 8, data.Rn, 0);
+  return true;
+}
+
+bool TryDecodeST4_ASISDLSEP_I4_I(const InstData &data, Instruction &inst) {
+  uint64_t bytes = 0;
+  if (!TryDecodeLDnSTn(data, inst, &bytes, kActionRead)) return false;
+  AddPostIndexMemOp(inst, kActionWrite, bytes * 8, data.Rn, bytes);
+  return true;
+}
+
+bool TryDecodeST4_ASISDLSEP_R4_R(const InstData &data, Instruction &inst) {
+  uint64_t bytes = 0;
+  if (!TryDecodeLDnSTn(data, inst, &bytes, kActionRead)) return false;
+  AddPostIndexMemOp(inst, kActionWrite, bytes * 8, data.Rn, data.Rm);
+  return true;
+}
+
+static bool TryDecodeTableLookup(const InstData &data, Instruction &inst) {
+  AddQArrangementSpecifier(data, inst, "16B", "8B");
+  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegV, kUseAsValue, data.Rm);
+  for (uint8_t i = 0; i <= data.len; ++i) {
+    AddRegOperand(inst, kActionRead, kRegV, kUseAsValue,
+                  static_cast<aarch64::RegNum>((static_cast<uint8_t>(data.Rn) + i) % 32));
+  }
+  return true;
+}
+
+#define TABLE_DECODER(name) \
+  bool TryDecode##name(const InstData &data, Instruction &inst) { \
+    return TryDecodeTableLookup(data, inst); \
+  }
+TABLE_DECODER(TBL_ASIMDTBL_L1_1)
+TABLE_DECODER(TBL_ASIMDTBL_L2_2)
+TABLE_DECODER(TBL_ASIMDTBL_L3_3)
+TABLE_DECODER(TBL_ASIMDTBL_L4_4)
+TABLE_DECODER(TBX_ASIMDTBL_L1_1)
+TABLE_DECODER(TBX_ASIMDTBL_L2_2)
+TABLE_DECODER(TBX_ASIMDTBL_L3_3)
+TABLE_DECODER(TBX_ASIMDTBL_L4_4)
+#undef TABLE_DECODER
+
+static bool TryDecodeLD1Lane(const InstData &data, Instruction &inst,
+                            unsigned scale, unsigned mode) {
+  uint64_t index = 0;
+  switch (scale) {
+    case 0: index = (data.Q << 3) | (data.S << 2) | data.size; break;
+    case 1:
+      if (data.size & 1) return false;
+      index = (data.Q << 2) | (data.S << 1) | (data.size >> 1);
+      break;
+    case 2:
+      if (data.size != 0) return false;
+      index = (data.Q << 1) | data.S;
+      break;
+    case 3:
+      if (data.size != 1 || data.S) return false;
+      index = data.Q;
+      break;
+    default: return false;
+  }
+  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rt);
+  AddImmOperand(inst, index, kUnsigned, 32);
+  const uint64_t bytes = 1ULL << scale;
+  if (mode == 0) AddBasePlusOffsetMemOp(inst, kActionRead, bytes * 8, data.Rn, 0);
+  else if (mode == 1) AddPostIndexMemOp(inst, kActionRead, bytes * 8, data.Rn, bytes);
+  else AddPostIndexMemOp(inst, kActionRead, bytes * 8, data.Rn, data.Rm);
+  return true;
+}
+
+#define LD1_LANE_DECODERS(scale, plain, imm, reg) \
+  bool TryDecodeLD1_ASISDLSO_##plain(const InstData &data, Instruction &inst) { \
+    return TryDecodeLD1Lane(data, inst, scale, 0); \
+  } \
+  bool TryDecodeLD1_ASISDLSOP_##imm(const InstData &data, Instruction &inst) { \
+    return TryDecodeLD1Lane(data, inst, scale, 1); \
+  } \
+  bool TryDecodeLD1_ASISDLSOP_##reg(const InstData &data, Instruction &inst) { \
+    return TryDecodeLD1Lane(data, inst, scale, 2); \
+  }
+LD1_LANE_DECODERS(0, B1_1B, B1_I1B, BX1_R1B)
+LD1_LANE_DECODERS(1, H1_1H, H1_I1H, HX1_R1H)
+LD1_LANE_DECODERS(2, S1_1S, S1_I1S, SX1_R1S)
+LD1_LANE_DECODERS(3, D1_1D, D1_I1D, DX1_R1D)
+#undef LD1_LANE_DECODERS
+
+static bool TryDecodeLD1Replicate(const InstData &data, Instruction &inst, unsigned mode) {
+  const uint64_t bytes = 1ULL << data.size;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, bytes * 8);
+  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rt);
+  if (mode == 0) AddBasePlusOffsetMemOp(inst, kActionRead, bytes * 8, data.Rn, 0);
+  else if (mode == 1) AddPostIndexMemOp(inst, kActionRead, bytes * 8, data.Rn, bytes);
+  else AddPostIndexMemOp(inst, kActionRead, bytes * 8, data.Rn, data.Rm);
+  return true;
+}
+bool TryDecodeLD1R_ASISDLSO_R1(const InstData &data, Instruction &inst) {
+  return TryDecodeLD1Replicate(data, inst, 0);
+}
+bool TryDecodeLD1R_ASISDLSOP_R1_I(const InstData &data, Instruction &inst) {
+  return TryDecodeLD1Replicate(data, inst, 1);
+}
+bool TryDecodeLD1R_ASISDLSOP_RX1_R(const InstData &data, Instruction &inst) {
+  return TryDecodeLD1Replicate(data, inst, 2);
+}
+
+static bool TryDecodeFPCompareZeroVector(const InstData &data, Instruction &inst) {
+  if (data.sz && !data.Q) return false;  // Reserved 1D vector arrangement.
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32ULL << data.sz);
+  return TryDecodeRdW_Rn(data, inst, data.Q ? kRegQ : kRegD);
+}
+
+static bool TryDecodeFPCompareScalar(const InstData &data, Instruction &inst, bool zero) {
+  AddElementSizeSuffix(inst, 2 + data.sz);
+  const auto reg = data.sz ? kRegD : kRegS;
+  return zero ? TryDecodeRdW_Rn(data, inst, reg) : TryDecodeRdW_Rn_Rm(data, inst, reg);
+}
+
+#define FP_COMPARE_REGISTER_DECODER(op) \
+  bool TryDecode##op##_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) { \
+    return TryDecodeFP_ASIMDSAME(data, inst); \
+  } \
+  bool TryDecode##op##_ASISDSAME_ONLY(const InstData &data, Instruction &inst) { \
+    return TryDecodeFPCompareScalar(data, inst, false); \
+  }
+FP_COMPARE_REGISTER_DECODER(FCMEQ)
+FP_COMPARE_REGISTER_DECODER(FCMGT)
+FP_COMPARE_REGISTER_DECODER(FCMGE)
+#undef FP_COMPARE_REGISTER_DECODER
+
+#define FP_COMPARE_ZERO_DECODER(op) \
+  bool TryDecode##op##_ASIMDMISC_FZ(const InstData &data, Instruction &inst) { \
+    return TryDecodeFPCompareZeroVector(data, inst); \
+  } \
+  bool TryDecode##op##_ASISDMISC_FZ(const InstData &data, Instruction &inst) { \
+    return TryDecodeFPCompareScalar(data, inst, true); \
+  }
+FP_COMPARE_ZERO_DECODER(FCMEQ)
+FP_COMPARE_ZERO_DECODER(FCMGT)
+FP_COMPARE_ZERO_DECODER(FCMGE)
+FP_COMPARE_ZERO_DECODER(FCMLT)
+FP_COMPARE_ZERO_DECODER(FCMLE)
+#undef FP_COMPARE_ZERO_DECODER
+
+static bool TryDecodeSIMDIntegerToFloat(const InstData &data, Instruction &inst, bool scalar) {
+  if (scalar) {
+    AddElementSizeSuffix(inst, 2 + data.sz);
+    return TryDecodeRdW_Rn(data, inst, data.sz ? kRegD : kRegS);
+  }
+  if (data.sz && !data.Q) return false;  // Reserved 1D vector arrangement.
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32ULL << data.sz);
+  return TryDecodeRdW_Rn(data, inst, data.Q ? kRegQ : kRegD);
+}
+#define SIMD_INT_TO_FP_DECODER(op) \
+  bool TryDecode##op##_ASIMDMISC_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeSIMDIntegerToFloat(data, inst, false); \
+  } \
+  bool TryDecode##op##_ASISDMISC_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeSIMDIntegerToFloat(data, inst, true); \
+  }
+SIMD_INT_TO_FP_DECODER(SCVTF)
+SIMD_INT_TO_FP_DECODER(UCVTF)
+#undef SIMD_INT_TO_FP_DECODER
+
+static bool TryDecodeSIMDFloatToInteger(const InstData &data, Instruction &inst, bool scalar) {
+  if (scalar) {
+    AddElementSizeSuffix(inst, 2 + data.sz);
+    return TryDecodeRdW_Rn(data, inst, data.sz ? kRegD : kRegS);
+  }
+  if (data.sz && !data.Q) return false;  // Reserved 1D vector arrangement.
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32ULL << data.sz);
+  return TryDecodeRdW_Rn(data, inst, data.Q ? kRegQ : kRegD);
+}
+#define SIMD_FP_TO_INT_DECODER(op) \
+  bool TryDecode##op##_ASIMDMISC_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeSIMDFloatToInteger(data, inst, false); \
+  } \
+  bool TryDecode##op##_ASISDMISC_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeSIMDFloatToInteger(data, inst, true); \
+  }
+SIMD_FP_TO_INT_DECODER(FCVTZS)
+SIMD_FP_TO_INT_DECODER(FCVTZU)
+#undef SIMD_FP_TO_INT_DECODER
+
+bool TryDecodeFCVTN_ASIMDMISC_N(const InstData &data, Instruction &inst) {
+  if (!data.sz) return false;  // FP32 -> FP16 requires separate FP16 rules.
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32);
+  return TryDecodeRdW_Rn(data, inst, kRegQ);
+}
+bool TryDecodeFCVTL_ASIMDMISC_L(const InstData &data, Instruction &inst) {
+  if (!data.sz) return false;  // FP16 -> FP32 is deliberately unsupported.
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32);
+  return TryDecodeRdW_Rn(data, inst, kRegQ);
 }
 
 // NOT  <Vd>.<T>, <Vn>.<T>
@@ -4729,7 +4953,6 @@ bool TryDecodeLDXR_LR32_LDSTEXCL(const InstData &data, Instruction &inst) {
   inst.is_atomic_read_modify_write = true;
   AddRegOperand(inst, kActionWrite, kRegW, kUseAsValue, data.Rt);
   AddBasePlusOffsetMemOp(inst, kActionRead, 32, data.Rn, 0);
-  AddMonitorOperand(inst);
   return true;
 }
 
@@ -4738,7 +4961,6 @@ bool TryDecodeLDXR_LR64_LDSTEXCL(const InstData &data, Instruction &inst) {
   inst.is_atomic_read_modify_write = true;
   AddRegOperand(inst, kActionWrite, kRegX, kUseAsValue, data.Rt);
   AddBasePlusOffsetMemOp(inst, kActionRead, 64, data.Rn, 0);
-  AddMonitorOperand(inst);
   return true;
 }
 
@@ -4748,7 +4970,6 @@ bool TryDecodeSTLXR_SR32_LDSTEXCL(const InstData &data, Instruction &inst) {
   AddRegOperand(inst, kActionWrite, kRegW, kUseAsValue, data.Rs);
   AddRegOperand(inst, kActionRead, kRegW, kUseAsValue, data.Rt);
   AddBasePlusOffsetMemOp(inst, kActionWrite, 32, data.Rn, 0);
-  AddMonitorOperand(inst);
   return true;
 }
 
@@ -4758,9 +4979,81 @@ bool TryDecodeSTLXR_SR64_LDSTEXCL(const InstData &data, Instruction &inst) {
   AddRegOperand(inst, kActionWrite, kRegW, kUseAsValue, data.Rs);
   AddRegOperand(inst, kActionRead, kRegX, kUseAsValue, data.Rt);
   AddBasePlusOffsetMemOp(inst, kActionWrite, 64, data.Rn, 0);
-  AddMonitorOperand(inst);
   return true;
 }
+
+bool TryDecodeSTXR_SR32_LDSTEXCL(const InstData &data, Instruction &inst) {
+  return TryDecodeSTLXR_SR32_LDSTEXCL(data, inst);
+}
+bool TryDecodeSTXR_SR64_LDSTEXCL(const InstData &data, Instruction &inst) {
+  return TryDecodeSTLXR_SR64_LDSTEXCL(data, inst);
+}
+static bool TryDecodeNarrowExclusiveLoad(const InstData &data, Instruction &inst, uint64_t bits) {
+  inst.is_atomic_read_modify_write = true;
+  AddRegOperand(inst, kActionWrite, kRegW, kUseAsValue, data.Rt);
+  AddBasePlusOffsetMemOp(inst, kActionRead, bits, data.Rn, 0);
+  return true;
+}
+static bool TryDecodeNarrowExclusiveStore(const InstData &data, Instruction &inst, uint64_t bits) {
+  inst.is_atomic_read_modify_write = true;
+  AddRegOperand(inst, kActionWrite, kRegW, kUseAsValue, data.Rs);
+  AddRegOperand(inst, kActionRead, kRegW, kUseAsValue, data.Rt);
+  AddBasePlusOffsetMemOp(inst, kActionWrite, bits, data.Rn, 0);
+  return true;
+}
+#define NARROW_EXCLUSIVE_DECODERS(suffix, bits) \
+  bool TryDecodeLDXR##suffix##_LR32_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeNarrowExclusiveLoad(data, inst, bits); \
+  } \
+  bool TryDecodeLDAXR##suffix##_LR32_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeNarrowExclusiveLoad(data, inst, bits); \
+  } \
+  bool TryDecodeSTXR##suffix##_SR32_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeNarrowExclusiveStore(data, inst, bits); \
+  } \
+  bool TryDecodeSTLXR##suffix##_SR32_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeNarrowExclusiveStore(data, inst, bits); \
+  }
+NARROW_EXCLUSIVE_DECODERS(B, 8)
+NARROW_EXCLUSIVE_DECODERS(H, 16)
+#undef NARROW_EXCLUSIVE_DECODERS
+bool TryDecodeCLREX_BN_SYSTEM(const InstData &, Instruction &) {
+  return true;  // The architectural immediate does not select a monitor.
+}
+static bool TryDecodeExclusivePairLoad(const InstData &data, Instruction &inst, uint64_t bits) {
+  if (data.Rt == data.Rt2) return false;  // Constrained-unpredictable duplicate destinations.
+  inst.is_atomic_read_modify_write = true;
+  const auto rclass = bits == 64 ? kRegX : kRegW;
+  AddRegOperand(inst, kActionWrite, rclass, kUseAsValue, data.Rt);
+  AddRegOperand(inst, kActionWrite, rclass, kUseAsValue, data.Rt2);
+  AddBasePlusOffsetMemOp(inst, kActionRead, bits * 2, data.Rn, 0);
+  return true;
+}
+static bool TryDecodeExclusivePairStore(const InstData &data, Instruction &inst, uint64_t bits) {
+  inst.is_atomic_read_modify_write = true;
+  const auto rclass = bits == 64 ? kRegX : kRegW;
+  AddRegOperand(inst, kActionWrite, kRegW, kUseAsValue, data.Rs);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rt);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rt2);
+  AddBasePlusOffsetMemOp(inst, kActionWrite, bits * 2, data.Rn, 0);
+  return true;
+}
+#define EXCLUSIVE_PAIR_DECODERS(bits) \
+  bool TryDecodeLDXP_LP##bits##_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeExclusivePairLoad(data, inst, bits); \
+  } \
+  bool TryDecodeLDAXP_LP##bits##_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeExclusivePairLoad(data, inst, bits); \
+  } \
+  bool TryDecodeSTXP_SP##bits##_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeExclusivePairStore(data, inst, bits); \
+  } \
+  bool TryDecodeSTLXP_SP##bits##_LDSTEXCL(const InstData &data, Instruction &inst) { \
+    return TryDecodeExclusivePairStore(data, inst, bits); \
+  }
+EXCLUSIVE_PAIR_DECODERS(32)
+EXCLUSIVE_PAIR_DECODERS(64)
+#undef EXCLUSIVE_PAIR_DECODERS
 
 static uint64_t ConcatABCDEFGHToU8(const InstData &data) {
   uint64_t imm = data.a;
@@ -4908,6 +5201,209 @@ bool TryDecodeUSHR_ASIMDSHF_R(const InstData &data, Instruction &inst) {
   AddImmOperand(inst, shift);
   return true;
 }
+
+// USHL <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
+bool TryDecodeUSHL_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  if (data.size == 3 && !data.Q) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8ULL << data.size);
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegV);
+}
+
+// Scalar USHL is allocated only for 64-bit elements.
+bool TryDecodeUSHL_ASISDSAME_ONLY(const InstData &data, Instruction &inst) {
+  if (data.size != 3) return false;
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegV);
+}
+
+static bool TryDecodeIntegerSHL(const InstData &data, Instruction &inst, bool scalar) {
+  uint64_t highest = 0;
+  if (!MostSignificantSetBit(data.immh.uimm, &highest)) return false;
+  if (scalar ? highest != 3 : (highest == 3 && !data.Q)) return false;
+  const uint64_t bits = 8ULL << highest;
+  const uint64_t shift = (data.immh.uimm << 3) + data.immb.uimm - bits;
+  if (!scalar) AddArrangementSpecifier(inst, data.Q ? 128 : 64, bits);
+  TryDecodeRdW_Rn(data, inst, kRegV);
+  AddImmOperand(inst, shift);
+  return true;
+}
+
+bool TryDecodeSHL_ASIMDSHF_R(const InstData &data, Instruction &inst) {
+  return TryDecodeIntegerSHL(data, inst, false);
+}
+
+bool TryDecodeSHL_ASISDSHF_R(const InstData &data, Instruction &inst) {
+  return TryDecodeIntegerSHL(data, inst, true);
+}
+
+// Q selects XTN2's upper-half destination; the source is always 128 bits.
+bool TryDecodeXTN_ASIMDMISC_N(const InstData &data, Instruction &inst) {
+  if (data.size == 3) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8ULL << data.size);
+  return TryDecodeRdW_Rn(data, inst, kRegV);
+}
+
+static bool TryDecodeIntegerPermute(const InstData &data, Instruction &inst) {
+  if (data.size == 3 && !data.Q) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8ULL << data.size);
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegV);
+}
+
+#define INTEGER_PERMUTE_DECODER(name) \
+  bool TryDecode##name##_ASIMDPERM_ONLY(const InstData &data, Instruction &inst) { \
+    return TryDecodeIntegerPermute(data, inst); \
+  }
+INTEGER_PERMUTE_DECODER(ZIP1)
+INTEGER_PERMUTE_DECODER(ZIP2)
+INTEGER_PERMUTE_DECODER(UZP1)
+INTEGER_PERMUTE_DECODER(UZP2)
+#undef INTEGER_PERMUTE_DECODER
+
+static bool TryDecodeVectorREV(const InstData &data, Instruction &inst, uint64_t container_bits) {
+  const uint64_t element_bits = 8ULL << data.size;
+  if (element_bits >= container_bits) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, element_bits);
+  return TryDecodeRdW_Rn(data, inst, kRegV);
+}
+
+static bool TryDecodeVectorFloatSign(const InstData &data, Instruction &inst, bool half) {
+  const uint64_t bits = half ? 16 : (32ULL << data.sz);
+  if (bits == 64 && !data.Q) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, bits);
+  return TryDecodeRdW_Rn(data, inst, kRegV);
+}
+
+#define VECTOR_FLOAT_SIGN_DECODER(op) \
+  bool TryDecode##op##_ASIMDMISC_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeVectorFloatSign(data, inst, false); \
+  } \
+  bool TryDecode##op##_ASIMDMISCFP16_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeVectorFloatSign(data, inst, true); \
+  }
+VECTOR_FLOAT_SIGN_DECODER(FABS)
+VECTOR_FLOAT_SIGN_DECODER(FNEG)
+#undef VECTOR_FLOAT_SIGN_DECODER
+
+static bool TryDecodeVectorFloatImmediate(const InstData &data, Instruction &inst, uint64_t bits) {
+  if (bits == 64 && !data.Q) return false;
+  const uint64_t imm = ConcatABCDEFGHToU8(data);
+  uint64_t value;
+  if (bits == 16) {
+    value = ((imm >> 7) << 15) | ((imm & 0x3F) << 6);
+    value |= (imm & 0x40) ? (0x3ULL << 12) : (1ULL << 14);
+  } else if (bits == 32) {
+    value = VFPExpandImmToFloat32(imm);
+  } else {
+    value = VFPExpandImmToFloat64(imm);
+  }
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, bits);
+  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rd);
+  AddImmOperand(inst, value, kUnsigned, bits);
+  return true;
+}
+
+bool TryDecodeFMOV_ASIMDIMM_H_H(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorFloatImmediate(data, inst, 16);
+}
+bool TryDecodeFMOV_ASIMDIMM_S_S(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorFloatImmediate(data, inst, 32);
+}
+bool TryDecodeFMOV_ASIMDIMM_D2_D(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorFloatImmediate(data, inst, 64);
+}
+
+bool TryDecodeFMIN_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+bool TryDecodeFMAX_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+bool TryDecodeFMIN_S_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegS);
+}
+bool TryDecodeFMIN_D_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegD);
+}
+bool TryDecodeFMAX_S_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegS);
+}
+bool TryDecodeFMAX_D_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegD);
+}
+
+bool TryDecodeFNMUL_S_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegS);
+}
+bool TryDecodeFNMUL_D_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegD);
+}
+bool TryDecodeFABD_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+bool TryDecodeFABD_ASISDSAME_ONLY(const InstData &data, Instruction &inst) {
+  AddElementSizeSuffix(inst, data.sz + 2);
+  return TryDecodeRdW_Rn_Rm(data, inst, data.sz ? kRegD : kRegS);
+}
+bool TryDecodeFSQRT_S_FLOATDP1(const InstData &data, Instruction &inst) {
+  if (IsUnallocatedFloatEncoding(data)) return false;
+  return TryDecodeRdW_Rn(data, inst, kRegS);
+}
+bool TryDecodeFSQRT_D_FLOATDP1(const InstData &data, Instruction &inst) {
+  if (IsUnallocatedFloatEncoding(data)) return false;
+  return TryDecodeRdW_Rn(data, inst, kRegD);
+}
+bool TryDecodeFSQRT_ASIMDMISC_R(const InstData &data, Instruction &inst) {
+  return TryDecodeVectorFloatSign(data, inst, false);
+}
+
+bool TryDecodeFRECPS_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+bool TryDecodeFRSQRTS_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  return TryDecodeFP_ASIMDSAME(data, inst);
+}
+bool TryDecodeFRECPS_ASISDSAME_ONLY(const InstData &data, Instruction &inst) {
+  AddElementSizeSuffix(inst, data.sz + 2);
+  return TryDecodeRdW_Rn_Rm(data, inst, data.sz ? kRegD : kRegS);
+}
+bool TryDecodeFRSQRTS_ASISDSAME_ONLY(const InstData &data, Instruction &inst) {
+  AddElementSizeSuffix(inst, data.sz + 2);
+  return TryDecodeRdW_Rn_Rm(data, inst, data.sz ? kRegD : kRegS);
+}
+
+// Integer multiply, accumulate, and subtract use the same operand layouts.
+static bool TryDecodeIntegerMultiplyVector(const InstData &data, Instruction &inst) {
+  if (data.size == 3) return false;  // No 64-bit integer multiply lanes.
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8UL << data.size);
+  return TryDecodeRdW_Rn_Rm(data, inst, data.Q ? kRegQ : kRegD);
+}
+
+static bool TryDecodeIntegerMultiplyElement(const InstData &data, Instruction &inst) {
+  if (data.size != 1 && data.size != 2) return false;
+  const bool half = data.size == 1;
+  // H elements borrow M for index bit zero, so Vm is restricted to V0..V15.
+  // S elements instead use M as register bit four and H:L as the lane index.
+  const uint64_t index = half ? (data.H << 2) | (data.L << 1) | data.M : (data.H << 1) | data.L;
+  const auto rm = static_cast<RegNum>(static_cast<uint8_t>(data.Rm) | (half ? 0 : data.M << 4));
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8UL << data.size);
+  const auto rclass = data.Q ? kRegQ : kRegD;
+  AddRegOperand(inst, kActionWrite, rclass, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rn);
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, rm);
+  AddImmOperand(inst, index);
+  return true;
+}
+
+#define INTEGER_MULTIPLY_DECODERS(op) \
+  bool TryDecode##op##_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) { \
+    return TryDecodeIntegerMultiplyVector(data, inst); \
+  } \
+  bool TryDecode##op##_ASIMDELEM_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeIntegerMultiplyElement(data, inst); \
+  }
+INTEGER_MULTIPLY_DECODERS(MUL)
+INTEGER_MULTIPLY_DECODERS(MLA)
+INTEGER_MULTIPLY_DECODERS(MLS)
+#undef INTEGER_MULTIPLY_DECODERS
 
 }  // namespace aarch64
 

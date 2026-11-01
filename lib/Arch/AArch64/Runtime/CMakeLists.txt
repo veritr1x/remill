@@ -31,6 +31,12 @@ set(AARCH64RUNTIME_SOURCEFILES
 set_source_files_properties(Instructions.cpp PROPERTIES COMPILE_FLAGS "-O3 -g0")
 set_source_files_properties(BasicBlock.cpp PROPERTIES COMPILE_FLAGS "-O0 -g3")
 
+# Instruction semantics are included by Instructions.cpp. Track all of them,
+# including newly added instruction groups, when rebuilding its bitcode.
+file(GLOB AARCH64_SEMANTICS_DEPENDENCIES CONFIGURE_DEPENDS
+  "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/*.cpp"
+)
+
 function(add_runtime_helper target_name address_bit_size little_endian)
   message(" > Generating runtime target: ${target_name}")
 
@@ -55,19 +61,7 @@ function(add_runtime_helper target_name address_bit_size little_endian)
     "${REMILL_INCLUDE_DIR}/remill/Arch/AArch64/Runtime/State.h"
     "${REMILL_INCLUDE_DIR}/remill/Arch/AArch64/Runtime/Types.h"
 
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/CONVERT.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/BITBYTE.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/SIMD.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/COND.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/BINARY.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/SHIFT.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/BRANCH.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/DATAXFER.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/CALL_RET.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/MISC.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/FLAGS.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/LOGICAL.cpp"
-    "${REMILL_LIB_DIR}/Arch/AArch64/Semantics/SYSTEM.cpp"
+    ${AARCH64_SEMANTICS_DEPENDENCIES}
   )
 endfunction()
 

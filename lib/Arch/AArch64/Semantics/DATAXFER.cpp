@@ -153,8 +153,10 @@ DEF_SEM(StoreToOffset, S src, D base, ADDR offset) {
 
 template <typename S, typename D>
 DEF_SEM(StoreRelease, S src, D dst) {
-  WriteTrunc(dst, Read(src));
+  // Order preceding reads and writes before publishing the stored value.
+  memory = __remill_barrier_load_store(memory);
   memory = __remill_barrier_store_store(memory);
+  WriteTrunc(dst, Read(src));
   return memory;
 }
 
@@ -170,6 +172,9 @@ DEF_ISEL(STR_32_LDST_POS) = Store<R32, M32W>;
 DEF_ISEL(STR_64_LDST_POS) = Store<R64, M64W>;
 
 DEF_ISEL(STLR_SL32_LDSTEXCL) = StoreRelease<R32, M32W>;
+DEF_ISEL(STLR_SL64_LDSTEXCL) = StoreRelease<R64, M64W>;
+DEF_ISEL(STLRB_SL32_LDSTEXCL) = StoreRelease<R32, M8W>;
+DEF_ISEL(STLRH_SL32_LDSTEXCL) = StoreRelease<R32, M16W>;
 
 DEF_ISEL(STRB_32_LDST_POS) = Store<R32, M8W>;
 DEF_ISEL(STRB_32_LDST_IMMPOST) = StoreUpdateIndex<R32, M8W>;
@@ -316,47 +321,6 @@ DEF_ISEL(STUR_64_LDST_UNSCALED) = Store<R64, M64W>;
 DEF_ISEL(MOVZ_32_MOVEWIDE) = Load<R32W, I32>;
 DEF_ISEL(MOVZ_64_MOVEWIDE) = Load<R64W, I64>;
 
-
-namespace {
-
-template <typename D, typename S>
-DEF_SEM(LDXR, D dst, S src, R64W monitor) {
-  WriteZExt(dst, Read(src));
-  Write(monitor, AddressOf(src));
-  return memory;
-}
-
-template <typename D, typename S>
-DEF_SEM(LDAXR, D dst, S src, R64W monitor) {
-  memory = __remill_barrier_load_store(memory);
-  WriteZExt(dst, Read(src));
-  Write(monitor, AddressOf(src));
-  return memory;
-}
-
-template <typename S, typename D>
-DEF_SEM(STLXR, R32W dst1, S src1, D dst2, R64W monitor) {
-  auto old_addr = Read(monitor);
-  if (old_addr == AddressOf(dst2)) {
-    WriteZExt(dst2, Read(src1));
-    WriteZExt(dst1, 0_u32);  // Store succeeded.
-  } else {
-    WriteZExt(dst1, 1_u32);  // Store failed.
-  }
-  Write(monitor, 0_u64);
-  memory = __remill_barrier_store_store(memory);
-  return memory;
-}
-
-
-}  // namespace
-
-DEF_ISEL(LDXR_LR32_LDSTEXCL) = LDXR<R32W, M32>;
-DEF_ISEL(LDXR_LR64_LDSTEXCL) = LDXR<R64W, M64>;
-DEF_ISEL(LDAXR_LR32_LDSTEXCL) = LDAXR<R32W, M32>;
-DEF_ISEL(LDAXR_LR64_LDSTEXCL) = LDAXR<R64W, M64>;
-DEF_ISEL(STLXR_SR32_LDSTEXCL) = STLXR<R32, M32W>;
-DEF_ISEL(STLXR_SR64_LDSTEXCL) = STLXR<R64, M64W>;
 
 namespace {
 
@@ -733,6 +697,17 @@ DEF_SEM(STR_Q_FromOffset, V128 src, MV128W dst, ADDR offset) {
   return memory;
 }
 
+#define VECTOR_STORE_FROM_OFFSET(size) \
+  DEF_SEM(STR_V##size##_FromOffset, V##size src, MV##size##W dst, ADDR offset) { \
+    UWriteV##size(DisplaceAddress(dst, Read(offset)), UReadV##size(src)); \
+    return memory; \
+  }
+VECTOR_STORE_FROM_OFFSET(8)
+VECTOR_STORE_FROM_OFFSET(16)
+VECTOR_STORE_FROM_OFFSET(32)
+VECTOR_STORE_FROM_OFFSET(64)
+#undef VECTOR_STORE_FROM_OFFSET
+
 DEF_SEM(STR_B_UpdateIndex, V8 src, MV8W dst, R64W dst_reg, ADDR next_addr) {
   UWriteV8(dst, UReadV8(src));
   Write(dst_reg, Read(next_addr));
@@ -771,6 +746,11 @@ DEF_ISEL(STUR_D_LDST_UNSCALED) = STR_D;
 DEF_ISEL(STUR_Q_LDST_UNSCALED) = STR_Q;
 
 DEF_ISEL(STR_Q_LDST_REGOFF) = STR_Q_FromOffset;
+DEF_ISEL(STR_B_LDST_REGOFF) = STR_V8_FromOffset;
+DEF_ISEL(STR_BL_LDST_REGOFF) = STR_V8_FromOffset;
+DEF_ISEL(STR_H_LDST_REGOFF) = STR_V16_FromOffset;
+DEF_ISEL(STR_S_LDST_REGOFF) = STR_V32_FromOffset;
+DEF_ISEL(STR_D_LDST_REGOFF) = STR_V64_FromOffset;
 
 DEF_ISEL(STR_Q_LDST_IMMPRE) = STR_Q_UpdateIndex;
 
@@ -1310,6 +1290,62 @@ DEF_ISEL(LD4_ASISDLSE_R4_8H) = LD4_16<M16, 8>;
 DEF_ISEL(LD4_ASISDLSE_R4_2S) = LD4_32<M32, 2>;
 DEF_ISEL(LD4_ASISDLSE_R4_4S) = LD4_32<M32, 4>;
 DEF_ISEL(LD4_ASISDLSE_R4_2D) = LD4_64<M64, 2>;
+
+namespace {
+
+#define LDST4_SEMANTICS(size) \
+  template <typename S, size_t count> \
+  DEF_SEM(LD4_##size##_POSTINDEX, V128W dst1, V128W dst2, V128W dst3, V128W dst4, \
+          S src, R64W addr_reg, ADDR next_addr) { \
+    memory = LD4_##size<S, count>(memory, state, dst1, dst2, dst3, dst4, src); \
+    Write(addr_reg, Read(next_addr)); \
+    return memory; \
+  } \
+  template <typename D, size_t count> \
+  DEF_SEM(ST4_##size, V128 src1, V128 src2, V128 src3, V128 src4, D dst) { \
+    auto a = UReadV##size(src1); \
+    auto b = UReadV##size(src2); \
+    auto c = UReadV##size(src3); \
+    auto d = UReadV##size(src4); \
+    _Pragma("unroll") for (size_t i = 0; i < count; ++i) { \
+      Write(dst, UExtractV##size(a, i)); dst = GetElementPtr(dst, 1); \
+      Write(dst, UExtractV##size(b, i)); dst = GetElementPtr(dst, 1); \
+      Write(dst, UExtractV##size(c, i)); dst = GetElementPtr(dst, 1); \
+      Write(dst, UExtractV##size(d, i)); dst = GetElementPtr(dst, 1); \
+    } \
+    return memory; \
+  } \
+  template <typename D, size_t count> \
+  DEF_SEM(ST4_##size##_POSTINDEX, V128 src1, V128 src2, V128 src3, V128 src4, \
+          D dst, R64W addr_reg, ADDR next_addr) { \
+    memory = ST4_##size<D, count>(memory, state, src1, src2, src3, src4, dst); \
+    Write(addr_reg, Read(next_addr)); \
+    return memory; \
+  }
+
+LDST4_SEMANTICS(8)
+LDST4_SEMANTICS(16)
+LDST4_SEMANTICS(32)
+LDST4_SEMANTICS(64)
+#undef LDST4_SEMANTICS
+
+}  // namespace
+
+#define LDST4_ISEL(arr, size, count) \
+  DEF_ISEL(LD4_ASISDLSEP_I4_I_##arr) = LD4_##size##_POSTINDEX<M##size, count>; \
+  DEF_ISEL(LD4_ASISDLSEP_R4_R_##arr) = LD4_##size##_POSTINDEX<M##size, count>; \
+  DEF_ISEL(ST4_ASISDLSE_R4_##arr) = ST4_##size<M##size##W, count>; \
+  DEF_ISEL(ST4_ASISDLSEP_I4_I_##arr) = ST4_##size##_POSTINDEX<M##size##W, count>; \
+  DEF_ISEL(ST4_ASISDLSEP_R4_R_##arr) = ST4_##size##_POSTINDEX<M##size##W, count>;
+
+LDST4_ISEL(8B, 8, 8)
+LDST4_ISEL(16B, 8, 16)
+LDST4_ISEL(4H, 16, 4)
+LDST4_ISEL(8H, 16, 8)
+LDST4_ISEL(2S, 32, 2)
+LDST4_ISEL(4S, 32, 4)
+LDST4_ISEL(2D, 64, 2)
+#undef LDST4_ISEL
 
 namespace {
 

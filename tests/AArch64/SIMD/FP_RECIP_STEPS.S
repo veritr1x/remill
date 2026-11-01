@@ -1,0 +1,114 @@
+/*
+ * Copyright (c) 2026 Trail of Bits, Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Fused steps: NaN-sign order, 0*infinity constants, scaling and rounding. */
+
+TEST_BEGIN(FRECPS_ASIMDSAME_ONLY_2S, frecps_raw_2s, 3)
+TEST_INPUTS(0x7fc12345, 0x3f800000, 0, 0xffc12345, 0x3f800000, 0, 0x3f800000, 0xffc12345, 0, 0x7fc12345, 0x7f800001, 0, 0x7fc12345, 0x3f800000, 0x02000000, 0, 0x7f800000, 0, 0x80000000, 0xff800000, 0, 1, 0x7f800000, 0x01000000, 0x7f7fffff, 0x40000000, 0, 0x7f7fffff, 0x40000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3f800000, 0x40000000, 0x00800000, 0x3f800000, 0x40400000, 0x00800000)
+    dup v1.4s, ARG1_32
+    dup v2.4s, ARG2_32
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frecps v0.2s, v1.2s, v2.2s
+    frecps v1.2s, v1.2s, v2.2s
+TEST_END
+
+TEST_BEGIN(FRECPS_ASIMDSAME_ONLY_4S, frecps_raw_4s, 3)
+TEST_INPUTS(0x7fc12345, 0x3f800000, 0, 0xffc12345, 0x3f800000, 0, 0x3f800000, 0xffc12345, 0, 0x7fc12345, 0x7f800001, 0, 0x7fc12345, 0x3f800000, 0x02000000, 0, 0x7f800000, 0, 0x80000000, 0xff800000, 0, 1, 0x7f800000, 0x01000000, 0x7f7fffff, 0x40000000, 0, 0x7f7fffff, 0x40000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3f800000, 0x40000000, 0x00800000, 0x3f800000, 0x40400000, 0x00800000)
+    dup v1.4s, ARG1_32
+    dup v2.4s, ARG2_32
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frecps v0.4s, v1.4s, v2.4s
+    frecps v1.4s, v1.4s, v2.4s
+TEST_END
+
+TEST_BEGIN(FRECPS_ASIMDSAME_ONLY_2D, frecps_raw_2d, 3)
+TEST_INPUTS(0x7ff8123456789abc, 0x3ff0000000000000, 0, 0xfff8123456789abc, 0x3ff0000000000000, 0, 0x3ff0000000000000, 0xfff8123456789abc, 0, 0x7ff8123456789abc, 0x7ff0000000000001, 0, 0x7ff8123456789abc, 0x3ff0000000000000, 0x02000000, 0, 0x7ff0000000000000, 0, 0x8000000000000000, 0xfff0000000000000, 0, 1, 0x7ff0000000000000, 0x01000000, 0x7fefffffffffffff, 0x4000000000000000, 0, 0x7fefffffffffffff, 0x4000000000000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3ff0000000000000, 0x4000000000000000, 0x00800000, 0x3ff0000000000000, 0x4008000000000000, 0x00800000)
+    dup v1.2d, ARG1_64
+    dup v2.2d, ARG2_64
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frecps v0.2d, v1.2d, v2.2d
+    frecps v1.2d, v1.2d, v2.2d
+TEST_END
+
+TEST_BEGIN(FRECPS_ASISDSAME_ONLY_S, frecps_raw_s, 3)
+TEST_INPUTS(0x7fc12345, 0x3f800000, 0, 0xffc12345, 0x3f800000, 0, 0x3f800000, 0xffc12345, 0, 0x7fc12345, 0x7f800001, 0, 0x7fc12345, 0x3f800000, 0x02000000, 0, 0x7f800000, 0, 0x80000000, 0xff800000, 0, 1, 0x7f800000, 0x01000000, 0x7f7fffff, 0x40000000, 0, 0x7f7fffff, 0x40000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3f800000, 0x40000000, 0x00800000, 0x3f800000, 0x40400000, 0x00800000)
+    dup v1.4s, ARG1_32
+    dup v2.4s, ARG2_32
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frecps s0, s1, s2
+    frecps s1, s1, s2
+TEST_END
+
+TEST_BEGIN(FRECPS_ASISDSAME_ONLY_D, frecps_raw_d, 3)
+TEST_INPUTS(0x7ff8123456789abc, 0x3ff0000000000000, 0, 0xfff8123456789abc, 0x3ff0000000000000, 0, 0x3ff0000000000000, 0xfff8123456789abc, 0, 0x7ff8123456789abc, 0x7ff0000000000001, 0, 0x7ff8123456789abc, 0x3ff0000000000000, 0x02000000, 0, 0x7ff0000000000000, 0, 0x8000000000000000, 0xfff0000000000000, 0, 1, 0x7ff0000000000000, 0x01000000, 0x7fefffffffffffff, 0x4000000000000000, 0, 0x7fefffffffffffff, 0x4000000000000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3ff0000000000000, 0x4000000000000000, 0x00800000, 0x3ff0000000000000, 0x4008000000000000, 0x00800000)
+    dup v1.2d, ARG1_64
+    dup v2.2d, ARG2_64
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frecps d0, d1, d2
+    frecps d1, d1, d2
+TEST_END
+
+TEST_BEGIN(FRSQRTS_ASIMDSAME_ONLY_2S, frsqrts_raw_2s, 3)
+TEST_INPUTS(0x7fc12345, 0x3f800000, 0, 0xffc12345, 0x3f800000, 0, 0x3f800000, 0xffc12345, 0, 0x7fc12345, 0x7f800001, 0, 0x7fc12345, 0x3f800000, 0x02000000, 0, 0x7f800000, 0, 0x80000000, 0xff800000, 0, 1, 0x7f800000, 0x01000000, 0x7f7fffff, 0x40000000, 0, 0x7f7fffff, 0x40000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3f800000, 0x40000000, 0x00800000, 0x3f800000, 0x40400000, 0x00800000)
+    dup v1.4s, ARG1_32
+    dup v2.4s, ARG2_32
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frsqrts v0.2s, v1.2s, v2.2s
+    frsqrts v1.2s, v1.2s, v2.2s
+TEST_END
+
+TEST_BEGIN(FRSQRTS_ASIMDSAME_ONLY_4S, frsqrts_raw_4s, 3)
+TEST_INPUTS(0x7fc12345, 0x3f800000, 0, 0xffc12345, 0x3f800000, 0, 0x3f800000, 0xffc12345, 0, 0x7fc12345, 0x7f800001, 0, 0x7fc12345, 0x3f800000, 0x02000000, 0, 0x7f800000, 0, 0x80000000, 0xff800000, 0, 1, 0x7f800000, 0x01000000, 0x7f7fffff, 0x40000000, 0, 0x7f7fffff, 0x40000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3f800000, 0x40000000, 0x00800000, 0x3f800000, 0x40400000, 0x00800000)
+    dup v1.4s, ARG1_32
+    dup v2.4s, ARG2_32
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frsqrts v0.4s, v1.4s, v2.4s
+    frsqrts v1.4s, v1.4s, v2.4s
+TEST_END
+
+TEST_BEGIN(FRSQRTS_ASIMDSAME_ONLY_2D, frsqrts_raw_2d, 3)
+TEST_INPUTS(0x7ff8123456789abc, 0x3ff0000000000000, 0, 0xfff8123456789abc, 0x3ff0000000000000, 0, 0x3ff0000000000000, 0xfff8123456789abc, 0, 0x7ff8123456789abc, 0x7ff0000000000001, 0, 0x7ff8123456789abc, 0x3ff0000000000000, 0x02000000, 0, 0x7ff0000000000000, 0, 0x8000000000000000, 0xfff0000000000000, 0, 1, 0x7ff0000000000000, 0x01000000, 0x7fefffffffffffff, 0x4000000000000000, 0, 0x7fefffffffffffff, 0x4000000000000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3ff0000000000000, 0x4000000000000000, 0x00800000, 0x3ff0000000000000, 0x4008000000000000, 0x00800000)
+    dup v1.2d, ARG1_64
+    dup v2.2d, ARG2_64
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frsqrts v0.2d, v1.2d, v2.2d
+    frsqrts v1.2d, v1.2d, v2.2d
+TEST_END
+
+TEST_BEGIN(FRSQRTS_ASISDSAME_ONLY_S, frsqrts_raw_s, 3)
+TEST_INPUTS(0x7fc12345, 0x3f800000, 0, 0xffc12345, 0x3f800000, 0, 0x3f800000, 0xffc12345, 0, 0x7fc12345, 0x7f800001, 0, 0x7fc12345, 0x3f800000, 0x02000000, 0, 0x7f800000, 0, 0x80000000, 0xff800000, 0, 1, 0x7f800000, 0x01000000, 0x7f7fffff, 0x40000000, 0, 0x7f7fffff, 0x40000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3f800000, 0x40000000, 0x00800000, 0x3f800000, 0x40400000, 0x00800000)
+    dup v1.4s, ARG1_32
+    dup v2.4s, ARG2_32
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frsqrts s0, s1, s2
+    frsqrts s1, s1, s2
+TEST_END
+
+TEST_BEGIN(FRSQRTS_ASISDSAME_ONLY_D, frsqrts_raw_d, 3)
+TEST_INPUTS(0x7ff8123456789abc, 0x3ff0000000000000, 0, 0xfff8123456789abc, 0x3ff0000000000000, 0, 0x3ff0000000000000, 0xfff8123456789abc, 0, 0x7ff8123456789abc, 0x7ff0000000000001, 0, 0x7ff8123456789abc, 0x3ff0000000000000, 0x02000000, 0, 0x7ff0000000000000, 0, 0x8000000000000000, 0xfff0000000000000, 0, 1, 0x7ff0000000000000, 0x01000000, 0x7fefffffffffffff, 0x4000000000000000, 0, 0x7fefffffffffffff, 0x4000000000000000, 0x00400000, 1, 1, 0, 1, 1, 0x00800000, 0x3ff0000000000000, 0x4000000000000000, 0x00800000, 0x3ff0000000000000, 0x4008000000000000, 0x00800000)
+    dup v1.2d, ARG1_64
+    dup v2.2d, ARG2_64
+    msr fpcr, ARG3_64
+    msr fpsr, xzr
+    frsqrts d0, d1, d2
+    frsqrts d1, d1, d2
+TEST_END

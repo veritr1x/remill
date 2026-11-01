@@ -42,15 +42,21 @@
 #include <remill/Version/Version.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstdint>
 #include <fstream>
+#include <filesystem>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <system_error>
+#include <vector>
+#include <unordered_set>
 
 DEFINE_string(os, REMILL_OS,
               "Operating system name of the code being "
@@ -70,6 +76,12 @@ DEFINE_uint64(entry_address, -1,
               "Defaults to the value of -address.");
 
 DEFINE_string(bytes, "", "Hex-encoded byte string to lift.");
+DEFINE_string(bytes_file, "", "Raw binary bytes to lift, mapped at -address. Mutually exclusive with -bytes.");
+DEFINE_string(entry_addresses_file, "", "Whitespace-separated trace entry addresses (decimal or 0x-prefixed).");
+DEFINE_bool(lift_calls, false, "Lift direct callees contained in the input bytes instead of leaving them external.");
+DEFINE_string(trace_list_out, "", "Write the addresses of all lifted traces, one per line.");
+DEFINE_string(semantics_dir, "", "Use semantics bitcode from this directory; an explicit path must contain the requested architecture.");
+DEFINE_string(trace_heads_file, "", "Known trace boundaries; direct jumps to these addresses stay external instead of inlining across function boundaries.");
 
 DEFINE_string(
     ir_pre_out, "",
@@ -84,42 +96,63 @@ DEFINE_string(signature, "", "Function signature \"reg_out(reg_in,...)\"");
 DEFINE_bool(mute_state_escape, false, "Mute state escape");
 DEFINE_bool(symbolic_regs, false, "Set registers to a symbolic value");
 
-using Memory = std::map<uint64_t, uint8_t>;
+struct Memory {
+  uint64_t base;
+  std::vector<uint8_t> bytes;
+};
 
-// Unhexlify the data passed to `-bytes`, and fill in `memory` with each
-// such byte.
-static Memory UnhexlifyInputBytes(uint64_t addr_mask) {
-  Memory memory;
+static std::vector<uint64_t> ReadAddresses(const std::string &path) {
+  std::ifstream input(path);
+  if (!input) throw std::invalid_argument("Could not open address file " + path);
+  std::vector<uint64_t> addresses;
+  std::string token;
+  while (input >> token) {
+    size_t used = 0;
+    const int base = token.size() > 2 && token[0] == '0' &&
+        (token[1] == 'x' || token[1] == 'X') ? 16 : 10;
+    auto address = std::stoull(token, &used, base);
+    if (used != token.size() || token[0] == '-')
+      throw std::invalid_argument("Invalid address token " + token);
+    addresses.push_back(address);
+  }
+  if (input.bad() || addresses.empty())
+    throw std::invalid_argument("Address file is empty or unreadable: " + path);
+  return addresses;
+}
 
-  for (size_t i = 0; i < FLAGS_bytes.size(); i += 2) {
-    char nibbles[] = {FLAGS_bytes[i], FLAGS_bytes[i + 1], '\0'};
-    char *parsed_to = nullptr;
-    auto byte_val = strtol(nibbles, &parsed_to, 16);
+// Read a binary image or decode -bytes, mapping the first byte at -address.
+static Memory ReadInputBytes(uint64_t addr_mask) {
+  Memory memory{FLAGS_address, {}};
 
-    if (parsed_to != &(nibbles[2])) {
-      std::cerr << "Invalid hex byte value '" << nibbles
-                << "' specified in -bytes." << std::endl;
+  if (!FLAGS_bytes_file.empty()) {
+    std::ifstream input(FLAGS_bytes_file, std::ios::binary);
+    if (!input) {
+      std::cerr << "Could not open input file " << FLAGS_bytes_file << std::endl;
       exit(EXIT_FAILURE);
     }
-
-    auto byte_addr = FLAGS_address + (i / 2);
-    auto masked_addr = byte_addr & addr_mask;
-
-    // Make sure that if a really big number is specified for `-address`,
-    // that we don't accidentally wrap around and start filling out low
-    // byte addresses.
-    if (masked_addr < byte_addr) {
-      std::cerr
-          << "Too many bytes specified to -bytes, would result in a 32-bit overflow.";
-      exit(EXIT_FAILURE);
-
-    } else if (masked_addr < FLAGS_address) {
-      std::cerr
-          << "Too many bytes specified to -bytes, would result in a 64-bit overflow.";
+    memory.bytes.assign(std::istreambuf_iterator<char>(input), {});
+    if (input.bad() || memory.bytes.empty()) {
+      std::cerr << "Could not read nonempty input file " << FLAGS_bytes_file << std::endl;
       exit(EXIT_FAILURE);
     }
+  } else {
+    memory.bytes.reserve(FLAGS_bytes.size() / 2);
 
-    memory[byte_addr] = static_cast<uint8_t>(byte_val);
+    for (size_t i = 0; i < FLAGS_bytes.size(); i += 2) {
+      char nibbles[] = {FLAGS_bytes[i], FLAGS_bytes[i + 1], '\0'};
+      if (!std::isxdigit(static_cast<unsigned char>(nibbles[0])) ||
+          !std::isxdigit(static_cast<unsigned char>(nibbles[1]))) {
+        std::cerr << "Invalid hex byte value '" << nibbles
+                  << "' specified in -bytes." << std::endl;
+        exit(EXIT_FAILURE);
+      }
+      memory.bytes.push_back(static_cast<uint8_t>(strtol(nibbles, nullptr, 16)));
+    }
+  }
+
+  if (memory.bytes.size() - 1 > addr_mask - memory.base) {
+    std::cerr << "Input bytes overflow the architecture's address space." << std::endl;
+    exit(EXIT_FAILURE);
   }
 
   return memory;
@@ -131,13 +164,15 @@ struct SimpleTraceManager : remill::TraceManager {
   Memory &memory;
   uint64_t entry = 0;
   std::unordered_map<uint64_t, llvm::Function *> traces;
+  std::unordered_set<uint64_t> trace_heads;
 
   SimpleTraceManager(const remill::Arch *arch, llvm::Module *module,
-                     Memory &memory, uint64_t entry)
+                     Memory &memory, uint64_t entry,
+                     const std::vector<uint64_t> &known_heads)
       : arch(arch),
         module(module),
         memory(memory),
-        entry(entry) {}
+        entry(entry), trace_heads(known_heads.begin(), known_heads.end()) {}
 
   // Called when we have lifted, i.e. defined the contents, of a new trace.
   // The derived class is expected to do something useful with this.
@@ -151,8 +186,12 @@ struct SimpleTraceManager : remill::TraceManager {
   // NOTE: This is permitted to return a function from an arbitrary module.
   llvm::Function *GetLiftedTraceDefinition(uint64_t addr) override {
 
+    if (auto found = traces.find(addr); found != traces.end()) {
+      return found->second;
+    }
+
     // The entry function needs to be lifted by the TraceLifter
-    if (addr == entry) {
+    if (addr == entry || (FLAGS_lift_calls && TryReadExecutableByte(addr, nullptr))) {
       return nullptr;
     }
 
@@ -174,6 +213,11 @@ struct SimpleTraceManager : remill::TraceManager {
   //
   // NOTE: This is permitted to return a function from an arbitrary module.
   llvm::Function *GetLiftedTraceDeclaration(uint64_t addr) override {
+    if (trace_heads.count(addr)) {
+      auto name = TraceName(addr);
+      auto function = module->getFunction(name);
+      return function ? function : arch->DeclareLiftedFunction(name, module);
+    }
     return remill::TraceManager::GetLiftedTraceDeclaration(addr);
   }
 
@@ -181,10 +225,9 @@ struct SimpleTraceManager : remill::TraceManager {
   // at address `addr` is executable and readable, and updates the byte
   // pointed to by `byte` with the read value.
   bool TryReadExecutableByte(uint64_t addr, uint8_t *byte) override {
-    auto byte_it = memory.find(addr);
-    if (byte_it != memory.end()) {
+    if (addr >= memory.base && addr - memory.base < memory.bytes.size()) {
       if (byte != nullptr) {
-        *byte = byte_it->second;
+        *byte = memory.bytes[addr - memory.base];
       }
       return true;
     } else {
@@ -298,8 +341,8 @@ int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
 
 
-  if (FLAGS_bytes.empty()) {
-    std::cerr << "Please specify a sequence of hex bytes to -bytes."
+  if (FLAGS_bytes.empty() == FLAGS_bytes_file.empty()) {
+    std::cerr << "Specify exactly one of -bytes and -bytes_file."
               << std::endl;
     return EXIT_FAILURE;
   } else if (FLAGS_bytes.size() % 2) {
@@ -324,6 +367,26 @@ int main(int argc, char *argv[]) {
     FLAGS_entry_address = FLAGS_address;
   }
 
+  std::vector<uint64_t> entries;
+  std::vector<uint64_t> trace_heads;
+  if (!FLAGS_entry_addresses_file.empty()) {
+    try { entries = ReadAddresses(FLAGS_entry_addresses_file); }
+    catch (const std::exception &error) {
+      std::cerr << error.what() << std::endl;
+      return EXIT_FAILURE;
+    }
+    FLAGS_entry_address = entries.front();
+  } else {
+    entries.push_back(FLAGS_entry_address);
+  }
+  if (!FLAGS_trace_heads_file.empty()) {
+    try { trace_heads = ReadAddresses(FLAGS_trace_heads_file); }
+    catch (const std::exception &error) {
+      std::cerr << error.what() << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
   // Make sure `-address` and `-entry_address` are in-bounds for the target
   // architecture's address size.
   llvm::LLVMContext context;
@@ -338,24 +401,43 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (FLAGS_entry_address != (FLAGS_entry_address & addr_mask)) {
-    std::cerr << "Value " << std::hex << FLAGS_entry_address
-              << " passed to -entry_address does not fit into 32-bits. Did mean"
-              << " to specify a 64-bit architecture to -arch?" << std::endl;
-    return EXIT_FAILURE;
+  for (auto entry : entries) {
+    if (entry != (entry & addr_mask)) {
+      std::cerr << "Value " << std::hex << entry
+                << " passed to -entry_address does not fit into the architecture's address size."
+                << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  for (auto head : trace_heads) {
+    if (head != (head & addr_mask)) {
+      std::cerr << "Trace head does not fit into the architecture's address size." << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
-  std::unique_ptr<llvm::Module> module(remill::LoadArchSemantics(arch.get()));
+  std::vector<std::filesystem::path> semantics_dirs;
+  if (!FLAGS_semantics_dir.empty()) {
+    semantics_dirs.emplace_back(FLAGS_semantics_dir);
+    if (!remill::FindSemanticsBitcodeFile(remill::GetArchName(arch->arch_name),
+                                        semantics_dirs, false)) {
+      std::cerr << "No requested architecture semantics in " << FLAGS_semantics_dir << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  std::unique_ptr<llvm::Module> module(remill::LoadArchSemantics(arch.get(), semantics_dirs));
 
   const auto mem_ptr_type = arch->MemoryPointerType();
 
-  Memory memory = UnhexlifyInputBytes(addr_mask);
+  Memory memory = ReadInputBytes(addr_mask);
   SimpleTraceManager manager(arch.get(), module.get(), memory,
-                             FLAGS_entry_address);
-  if (!manager.TryReadExecutableByte(FLAGS_entry_address, nullptr)) {
-    std::cerr << "No executable code at address 0x" << std::hex
-              << FLAGS_entry_address << std::endl;
-    return EXIT_FAILURE;
+                             FLAGS_entry_address, trace_heads);
+  for (auto entry : entries) {
+    if (!manager.TryReadExecutableByte(entry, nullptr)) {
+      std::cerr << "No executable code at address 0x" << std::hex
+                << entry << std::endl;
+      return EXIT_FAILURE;
+    }
   }
   remill::IntrinsicTable intrinsics(module.get());
 
@@ -366,7 +448,25 @@ int main(int argc, char *argv[]) {
 
   // Lift all discoverable traces starting from `-entry_address` into
   // `module`.
-  trace_lifter.Lift(FLAGS_entry_address);
+  for (auto entry : entries) {
+    manager.entry = entry;
+    if (!trace_lifter.Lift(entry)) {
+      std::cerr << "Could not lift entry address 0x" << std::hex << entry << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
+  if (!FLAGS_trace_list_out.empty()) {
+    std::ofstream output(FLAGS_trace_list_out);
+    std::vector<uint64_t> addresses;
+    for (const auto &trace : manager.traces) addresses.push_back(trace.first);
+    std::sort(addresses.begin(), addresses.end());
+    for (auto addr : addresses) output << "0x" << std::hex << addr << '\n';
+    if (!output) {
+      std::cerr << "Could not write trace list " << FLAGS_trace_list_out << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
 
   // Remove llvm.compiler.used to not preserve unused semantics
   auto compilerUsed = module->getGlobalVariable("llvm.compiler.used", true);

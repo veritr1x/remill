@@ -268,6 +268,8 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/BINARY/MSUB_nA_DP_3SRC.S"
 #include "tests/AArch64/BINARY/SBC_n_ADDSUB_CARRY.S"
 #include "tests/AArch64/BINARY/ADC_n_ADDSUB_CARRY.S"
+#include "tests/AArch64/DATAXFER/LANE_STRUCTURE_LOADS.S"
+#include "tests/AArch64/SIMD/TABLE_LOOKUP.S"
 #include "tests/AArch64/BINARY/SBCS_n_ADDSUB_CARRY.S"
 #include "tests/AArch64/BINARY/SDIV_n_DP_2SRC.S"
 #include "tests/AArch64/BINARY/SMADDL_64WA_DP_3SRC.S"
@@ -423,6 +425,14 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/SIMD/NOT_ASIMDMISC_R.S"
 #include "tests/AArch64/SIMD/EXT_ASIMDINS_ONLY.S"
 #include "tests/AArch64/SIMD/USHR_ASISDSHF_R.S"
+#include "tests/AArch64/SIMD/SIMD_INTEGER.S"
+#include "tests/AArch64/SIMD/SIMD_MULTIPLY.S"
+#include "tests/AArch64/DATAXFER/EXCLUSIVE.S"
+#include "tests/AArch64/SIMD/SHUFFLE_INTEGER.S"
+#include "tests/AArch64/SIMD/FP_BITS.S"
+#include "tests/AArch64/SIMD/FP_MINMAX.S"
+#include "tests/AArch64/SIMD/FP_ARITH_EXTRA.S"
+#include "tests/AArch64/SIMD/FP_RECIP_STEPS.S"
 
 
 #include "tests/AArch64/SYSTEM/Mn_n_SYSTEM_FPSR.S"
