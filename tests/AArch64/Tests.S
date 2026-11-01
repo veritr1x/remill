@@ -428,6 +428,7 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/SIMD/SIMD_INTEGER.S"
 #include "tests/AArch64/SIMD/SIMD_MULTIPLY.S"
 #include "tests/AArch64/DATAXFER/EXCLUSIVE.S"
+#include "tests/AArch64/DATAXFER/LANE_STORES.S"
 #include "tests/AArch64/SIMD/SHUFFLE_INTEGER.S"
 #include "tests/AArch64/SIMD/FP_BITS.S"
 #include "tests/AArch64/SIMD/FP_MINMAX.S"

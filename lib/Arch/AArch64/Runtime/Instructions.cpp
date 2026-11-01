@@ -115,6 +115,7 @@ DEF_ISEL(INVALID_INSTRUCTION) = HandleInvalidInstruction;
 #include "lib/Arch/AArch64/Semantics/FP_RECIP_STEPS.cpp"
 #include "lib/Arch/AArch64/Semantics/TABLE.cpp"
 #include "lib/Arch/AArch64/Semantics/LANELOADS.cpp"
+#include "lib/Arch/AArch64/Semantics/LANESTORES.cpp"
 #include "lib/Arch/AArch64/Semantics/SIMD_INTEGER.cpp"
 #include "lib/Arch/AArch64/Semantics/SIMD_MULTIPLY.cpp"
 #include "lib/Arch/AArch64/Semantics/EXCLUSIVE.cpp"

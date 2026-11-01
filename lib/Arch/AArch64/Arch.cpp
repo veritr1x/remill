@@ -4777,8 +4777,8 @@ TABLE_DECODER(TBX_ASIMDTBL_L3_3)
 TABLE_DECODER(TBX_ASIMDTBL_L4_4)
 #undef TABLE_DECODER
 
-static bool TryDecodeLD1Lane(const InstData &data, Instruction &inst,
-                            unsigned scale, unsigned mode) {
+static bool TryDecodeLD1ST1Lane(const InstData &data, Instruction &inst,
+                               unsigned scale, unsigned mode, bool load) {
   uint64_t index = 0;
   switch (scale) {
     case 0: index = (data.Q << 3) | (data.S << 2) | data.size; break;
@@ -4796,30 +4796,47 @@ static bool TryDecodeLD1Lane(const InstData &data, Instruction &inst,
       break;
     default: return false;
   }
-  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rt);
+  AddRegOperand(inst, load ? kActionWrite : kActionRead, kRegV, kUseAsValue, data.Rt);
   AddImmOperand(inst, index, kUnsigned, 32);
   const uint64_t bytes = 1ULL << scale;
-  if (mode == 0) AddBasePlusOffsetMemOp(inst, kActionRead, bytes * 8, data.Rn, 0);
-  else if (mode == 1) AddPostIndexMemOp(inst, kActionRead, bytes * 8, data.Rn, bytes);
-  else AddPostIndexMemOp(inst, kActionRead, bytes * 8, data.Rn, data.Rm);
+  const auto action = load ? kActionRead : kActionWrite;
+  if (mode == 0) AddBasePlusOffsetMemOp(inst, action, bytes * 8, data.Rn, 0);
+  else if (mode == 1) AddPostIndexMemOp(inst, action, bytes * 8, data.Rn, bytes);
+  else AddPostIndexMemOp(inst, action, bytes * 8, data.Rn, data.Rm);
   return true;
 }
 
 #define LD1_LANE_DECODERS(scale, plain, imm, reg) \
   bool TryDecodeLD1_ASISDLSO_##plain(const InstData &data, Instruction &inst) { \
-    return TryDecodeLD1Lane(data, inst, scale, 0); \
+    return TryDecodeLD1ST1Lane(data, inst, scale, 0, true); \
   } \
   bool TryDecodeLD1_ASISDLSOP_##imm(const InstData &data, Instruction &inst) { \
-    return TryDecodeLD1Lane(data, inst, scale, 1); \
+    return TryDecodeLD1ST1Lane(data, inst, scale, 1, true); \
   } \
   bool TryDecodeLD1_ASISDLSOP_##reg(const InstData &data, Instruction &inst) { \
-    return TryDecodeLD1Lane(data, inst, scale, 2); \
+    return TryDecodeLD1ST1Lane(data, inst, scale, 2, true); \
   }
 LD1_LANE_DECODERS(0, B1_1B, B1_I1B, BX1_R1B)
 LD1_LANE_DECODERS(1, H1_1H, H1_I1H, HX1_R1H)
 LD1_LANE_DECODERS(2, S1_1S, S1_I1S, SX1_R1S)
 LD1_LANE_DECODERS(3, D1_1D, D1_I1D, DX1_R1D)
 #undef LD1_LANE_DECODERS
+
+#define ST1_LANE_DECODERS(scale, plain, imm, reg) \
+  bool TryDecodeST1_ASISDLSO_##plain(const InstData &data, Instruction &inst) { \
+    return TryDecodeLD1ST1Lane(data, inst, scale, 0, false); \
+  } \
+  bool TryDecodeST1_ASISDLSOP_##imm(const InstData &data, Instruction &inst) { \
+    return TryDecodeLD1ST1Lane(data, inst, scale, 1, false); \
+  } \
+  bool TryDecodeST1_ASISDLSOP_##reg(const InstData &data, Instruction &inst) { \
+    return TryDecodeLD1ST1Lane(data, inst, scale, 2, false); \
+  }
+ST1_LANE_DECODERS(0, B1_1B, B1_I1B, BX1_R1B)
+ST1_LANE_DECODERS(1, H1_1H, H1_I1H, HX1_R1H)
+ST1_LANE_DECODERS(2, S1_1S, S1_I1S, SX1_R1S)
+ST1_LANE_DECODERS(3, D1_1D, D1_I1D, DX1_R1D)
+#undef ST1_LANE_DECODERS
 
 static bool TryDecodeLD1Replicate(const InstData &data, Instruction &inst, unsigned mode) {
   const uint64_t bytes = 1ULL << data.size;
