@@ -38612,9 +38612,6 @@ bool TryDecodeFADDP_ASISDPAIR_ONLY_SD(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // SSHR  <V><d>, <V><n>, #<shift>
-bool TryDecodeSSHR_ASISDSHF_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SSHR SSHR_asimdshf_R:
 //   0 x Rd       0
@@ -38650,9 +38647,6 @@ bool TryDecodeSSHR_ASISDSHF_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // SSHR  <Vd>.<T>, <Vn>.<T>, #<shift>
-bool TryDecodeSSHR_ASIMDSHF_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // SHSUB SHSUB_asimdsame_only:
 //   0 x Rd       0

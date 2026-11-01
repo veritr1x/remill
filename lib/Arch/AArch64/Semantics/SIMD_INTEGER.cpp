@@ -51,6 +51,30 @@ INTEGER_SHIFT(32)
 INTEGER_SHIFT(64)
 #undef INTEGER_SHIFT
 
+#define INTEGER_RIGHT_SHIFT(size) \
+  template <size_t lanes, bool sign_extend> \
+  DEF_SEM(IntegerSHR##size, V128W dst, V128 src, I64 amount) { \
+    auto values = UReadV##size(src); \
+    auto result = UClearV##size(UReadV##size(dst)); \
+    const auto shift = Read(amount); \
+    constexpr uint64_t mask = UINT64_MAX >> (64 - size); \
+    _Pragma("unroll") for (size_t i = 0; i < lanes; ++i) { \
+      const uint64_t value = UExtractV##size(values, i); \
+      /* Legal shifts include the entire element width. Never shift by 64. */ \
+      uint64_t shifted = shift == size ? 0 : value >> shift; \
+      if (sign_extend && (value & (UINT64_C(1) << (size - 1)))) \
+        shifted |= shift == size ? mask : (mask << (size - shift)) & mask; \
+      result = UInsertV##size(result, i, static_cast<uint##size##_t>(shifted)); \
+    } \
+    UWriteV##size(dst, result); \
+    return memory; \
+  }
+INTEGER_RIGHT_SHIFT(8)
+INTEGER_RIGHT_SHIFT(16)
+INTEGER_RIGHT_SHIFT(32)
+INTEGER_RIGHT_SHIFT(64)
+#undef INTEGER_RIGHT_SHIFT
+
 #define INTEGER_NARROW(narrow, wide) \
   template <bool high> \
   DEF_SEM(IntegerXTN##narrow, V128W dst, V128 src) { \
@@ -74,7 +98,9 @@ INTEGER_NARROW(32, 64)
 
 #define INTEGER_SHIFT_ISEL(arr, size, lanes) \
   DEF_ISEL(USHL_ASIMDSAME_ONLY_##arr) = IntegerUSHL##size<lanes>; \
-  DEF_ISEL(SHL_ASIMDSHF_R_##arr) = IntegerSHL##size<lanes>;
+  DEF_ISEL(SHL_ASIMDSHF_R_##arr) = IntegerSHL##size<lanes>; \
+  DEF_ISEL(USHR_ASIMDSHF_R_##arr) = IntegerSHR##size<lanes, false>; \
+  DEF_ISEL(SSHR_ASIMDSHF_R_##arr) = IntegerSHR##size<lanes, true>;
 INTEGER_SHIFT_ISEL(8B, 8, 8)
 INTEGER_SHIFT_ISEL(16B, 8, 16)
 INTEGER_SHIFT_ISEL(4H, 16, 4)
@@ -86,6 +112,7 @@ INTEGER_SHIFT_ISEL(2D, 64, 2)
 
 DEF_ISEL(USHL_ASISDSAME_ONLY) = IntegerUSHL64<1>;
 DEF_ISEL(SHL_ASISDSHF_R) = IntegerSHL64<1>;
+DEF_ISEL(SSHR_ASISDSHF_R) = IntegerSHR64<1, true>;
 
 DEF_ISEL(XTN_ASIMDMISC_N_8B) = IntegerXTN8<false>;
 DEF_ISEL(XTN_ASIMDMISC_N_16B) = IntegerXTN8<true>;
