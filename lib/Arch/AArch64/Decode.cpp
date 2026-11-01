@@ -22480,9 +22480,6 @@ bool TryDecodeFRSQRTE_ASISDMISCFP16_R(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FRSQRTE  <V><d>, <V><n>
-bool TryDecodeFRSQRTE_ASISDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRSQRTE FRSQRTE_asimdmiscfp16_R:
 //   0 x Rd       0
@@ -22556,9 +22553,6 @@ bool TryDecodeFRSQRTE_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FRSQRTE  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFRSQRTE_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // ADD ADD_asisdsame_only:
 //   0 x Rd       0
@@ -39866,9 +39860,6 @@ bool TryDecodeFRECPE_ASISDMISCFP16_R(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FRECPE  <V><d>, <V><n>
-bool TryDecodeFRECPE_ASISDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRECPE FRECPE_asimdmiscfp16_R:
 //   0 x Rd       0
@@ -39942,9 +39933,6 @@ bool TryDecodeFRECPE_ASIMDMISCFP16_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FRECPE  <Vd>.<T>, <Vn>.<T>
-bool TryDecodeFRECPE_ASIMDMISC_R(const InstData &, Instruction &) {
-  return false;
-}
 
 // LD1R LD1R_asisdlso_R1:
 //   0 x Rt       0

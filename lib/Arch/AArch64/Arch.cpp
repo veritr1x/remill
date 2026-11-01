@@ -5387,6 +5387,18 @@ bool TryDecodeFRSQRTS_ASISDSAME_ONLY(const InstData &data, Instruction &inst) {
   return TryDecodeRdW_Rn_Rm(data, inst, data.sz ? kRegD : kRegS);
 }
 
+#define FP_ESTIMATE_DECODERS(op) \
+  bool TryDecode##op##_ASIMDMISC_R(const InstData &data, Instruction &inst) { \
+    return TryDecodeVectorFloatSign(data, inst, false); \
+  } \
+  bool TryDecode##op##_ASISDMISC_R(const InstData &data, Instruction &inst) { \
+    AddElementSizeSuffix(inst, data.sz + 2); \
+    return TryDecodeRdW_Rn(data, inst, data.sz ? kRegD : kRegS); \
+  }
+FP_ESTIMATE_DECODERS(FRECPE)
+FP_ESTIMATE_DECODERS(FRSQRTE)
+#undef FP_ESTIMATE_DECODERS
+
 // Integer multiply, accumulate, and subtract use the same operand layouts.
 static bool TryDecodeIntegerMultiplyVector(const InstData &data, Instruction &inst) {
   if (data.size == 3) return false;  // No 64-bit integer multiply lanes.
