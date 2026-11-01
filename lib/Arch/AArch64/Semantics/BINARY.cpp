@@ -185,6 +185,23 @@ DEF_ISEL(MSUB_64A_DP_3SRC) = MSUB<R64W, R64>;
 namespace {
 
 template <typename D, typename S>
+DEF_SEM(ADC, D dst, S src1, S src2) {
+  auto carry = ZExtTo<S>(Unsigned(FLAG_C));
+  WriteZExt(dst, UAdd(UAdd(Read(src1), Read(src2)), carry));
+  return memory;
+}
+
+template <typename D, typename S>
+DEF_SEM(ADCS, D dst, S src1, S src2) {
+  auto carry = ZExtTo<S>(Unsigned(FLAG_C));
+  auto lhs = Read(src1);
+  auto rhs = Read(src2);
+  auto res = AddWithCarryNZCV(state, lhs, rhs, rhs, carry);
+  WriteZExt(dst, res);
+  return memory;
+}
+
+template <typename D, typename S>
 DEF_SEM(SBC, D dst, S src1, S src2) {
   auto carry = ZExtTo<S>(Unsigned(FLAG_C));
   WriteZExt(dst, UAdd(UAdd(Read(src1), UNot(Read(src2))), carry));
@@ -201,6 +218,12 @@ DEF_SEM(SBCS, D dst, S src1, S src2) {
 }
 
 }  // namespace
+
+DEF_ISEL(ADC_32_ADDSUB_CARRY) = ADC<R32W, R32>;
+DEF_ISEL(ADC_64_ADDSUB_CARRY) = ADC<R64W, R64>;
+
+DEF_ISEL(ADCS_32_ADDSUB_CARRY) = ADCS<R32W, R32>;
+DEF_ISEL(ADCS_64_ADDSUB_CARRY) = ADCS<R64W, R64>;
 
 DEF_ISEL(SBC_32_ADDSUB_CARRY) = SBC<R32W, R32>;
 DEF_ISEL(SBC_64_ADDSUB_CARRY) = SBC<R64W, R64>;

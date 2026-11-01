@@ -2650,6 +2650,26 @@ bool TryDecodeRORV_64_DP_2SRC(const InstData &data, Instruction &inst) {
   return TryDecodeLSLV_64_DP_2SRC(data, inst);
 }
 
+// ADC  <Wd>, <Wn>, <Wm>
+bool TryDecodeADC_32_ADDSUB_CARRY(const InstData &data, Instruction &inst) {
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegW);
+}
+
+// ADC  <Xd>, <Xn>, <Xm>
+bool TryDecodeADC_64_ADDSUB_CARRY(const InstData &data, Instruction &inst) {
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegX);
+}
+
+// ADCS  <Wd>, <Wn>, <Wm>
+bool TryDecodeADCS_32_ADDSUB_CARRY(const InstData &data, Instruction &inst) {
+  return TryDecodeADC_32_ADDSUB_CARRY(data, inst);
+}
+
+// ADCS  <Xd>, <Xn>, <Xm>
+bool TryDecodeADCS_64_ADDSUB_CARRY(const InstData &data, Instruction &inst) {
+  return TryDecodeADC_64_ADDSUB_CARRY(data, inst);
+}
+
 // SBC  <Wd>, <Wn>, <Wm>
 bool TryDecodeSBC_32_ADDSUB_CARRY(const InstData &data, Instruction &inst) {
   return TryDecodeLSLV_32_DP_2SRC(data, inst);

@@ -267,6 +267,7 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/BINARY/MADD_nA_DP_3SRC.S"
 #include "tests/AArch64/BINARY/MSUB_nA_DP_3SRC.S"
 #include "tests/AArch64/BINARY/SBC_n_ADDSUB_CARRY.S"
+#include "tests/AArch64/BINARY/ADC_n_ADDSUB_CARRY.S"
 #include "tests/AArch64/BINARY/SBCS_n_ADDSUB_CARRY.S"
 #include "tests/AArch64/BINARY/SDIV_n_DP_2SRC.S"
 #include "tests/AArch64/BINARY/SMADDL_64WA_DP_3SRC.S"

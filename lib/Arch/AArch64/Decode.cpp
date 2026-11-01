@@ -21799,9 +21799,6 @@ bool TryDecodeCASLH_C32_LDSTEXCL(const InstData &, Instruction &) {
 //  30 0 op       0
 //  31 0 sf       0
 // ADCS  <Wd>, <Wn>, <Wm>
-bool TryDecodeADCS_32_ADDSUB_CARRY(const InstData &, Instruction &) {
-  return false;
-}
 
 // ADCS ADCS_64_addsub_carry:
 //   0 x Rd       0
@@ -21837,9 +21834,6 @@ bool TryDecodeADCS_32_ADDSUB_CARRY(const InstData &, Instruction &) {
 //  30 0 op       0
 //  31 1 sf       0
 // ADCS  <Xd>, <Xn>, <Xm>
-bool TryDecodeADCS_64_ADDSUB_CARRY(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRINTZ FRINTZ_H_floatdp1:
 //   0 x Rd       0
@@ -36708,9 +36702,6 @@ bool TryDecodeSTSETLB_32S_MEMOP(const InstData &, Instruction &) {
 //  30 0 op       0
 //  31 0 sf       0
 // ADC  <Wd>, <Wn>, <Wm>
-bool TryDecodeADC_32_ADDSUB_CARRY(const InstData &, Instruction &) {
-  return false;
-}
 
 // ADC ADC_64_addsub_carry:
 //   0 x Rd       0
@@ -36746,9 +36737,6 @@ bool TryDecodeADC_32_ADDSUB_CARRY(const InstData &, Instruction &) {
 //  30 0 op       0
 //  31 1 sf       0
 // ADC  <Xd>, <Xn>, <Xm>
-bool TryDecodeADC_64_ADDSUB_CARRY(const InstData &, Instruction &) {
-  return false;
-}
 
 // BFM BFC_BFM_32M_bitfield:
 //   0 x Rd       0
