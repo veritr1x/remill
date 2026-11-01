@@ -29253,9 +29253,6 @@ bool TryDecodeSTSMINL_64S_MEMOP(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TRN1  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeTRN1_ASIMDPERM_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // SMULL SMULL_asimddiff_L:
 //   0 x Rd       0
@@ -40967,9 +40964,6 @@ bool TryDecodeUADDL_ASIMDDIFF_L(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // TRN2  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeTRN2_ASIMDPERM_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQSHRUN SQSHRUN_asisdshf_N:
 //   0 x Rd       0
