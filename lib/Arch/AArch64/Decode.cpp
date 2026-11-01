@@ -16986,9 +16986,6 @@ bool TryDecodeFMLA_ASISDELEM_RH_H(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FMLA  <V><d>, <V><n>, <Vm>.<Ts>[<index>]
-bool TryDecodeFMLA_ASISDELEM_R_SD(const InstData &, Instruction &) {
-  return false;
-}
 
 // FMLA FMLA_asimdelem_RH_H:
 //   0 x Rd       0
@@ -17062,9 +17059,6 @@ bool TryDecodeFMLA_ASIMDELEM_RH_H(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // FMLA  <Vd>.<T>, <Vn>.<T>, <Vm>.<Ts>[<index>]
-bool TryDecodeFMLA_ASIMDELEM_R_SD(const InstData &, Instruction &) {
-  return false;
-}
 
 // SCVTF SCVTF_asisdmiscfp16_R:
 //   0 x Rd       0

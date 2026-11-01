@@ -4536,6 +4536,27 @@ bool TryDecodeFMUL_ASISDELEM_R_SD(const InstData &data, Instruction &inst) {
   return true;
 }
 
+static bool TryDecodeIndexedFMLA(const InstData &data, Instruction &inst, bool scalar) {
+  uint64_t index = 0;
+  RegNum rm;
+  if (!DecodeFPElement(data, &index, &rm) || (!scalar && data.sz && !data.Q)) return false;
+  if (scalar) AddElementSizeSuffix(inst, 2 + data.sz);
+  else AddArrangementSpecifier(inst, data.Q ? 128 : 64, 32UL << data.sz);
+  const auto rclass = scalar ? (data.sz ? kRegD : kRegS) : (data.Q ? kRegQ : kRegD);
+  AddRegOperand(inst, kActionWrite, rclass, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, rclass, kUseAsValue, data.Rn);
+  AddRegOperand(inst, kActionRead, kRegQ, kUseAsValue, rm);
+  AddImmOperand(inst, index);
+  return true;
+}
+bool TryDecodeFMLA_ASIMDELEM_R_SD(const InstData &data, Instruction &inst) {
+  return TryDecodeIndexedFMLA(data, inst, false);
+}
+bool TryDecodeFMLA_ASISDELEM_R_SD(const InstData &data, Instruction &inst) {
+  return TryDecodeIndexedFMLA(data, inst, true);
+}
+
 // FCSEL  <Sd>, <Sn>, <Sm>, <cond>
 bool TryDecodeFCSEL_S_FLOATSEL(const InstData &data, Instruction &inst) {
   TryDecodeRdW_Rn_Rm(data, inst, kRegS);

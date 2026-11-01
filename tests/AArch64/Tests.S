@@ -434,6 +434,7 @@ SYMBOL(__aarch64_test_table_begin):
 #include "tests/AArch64/SIMD/FP_MINMAX.S"
 #include "tests/AArch64/SIMD/FP_ARITH_EXTRA.S"
 #include "tests/AArch64/SIMD/FP_RECIP_STEPS.S"
+#include "tests/AArch64/SIMD/FP_FUSED_INDEXED.S"
 
 
 #include "tests/AArch64/SYSTEM/Mn_n_SYSTEM_FPSR.S"

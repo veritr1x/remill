@@ -113,6 +113,7 @@ DEF_ISEL(INVALID_INSTRUCTION) = HandleInvalidInstruction;
 #include "lib/Arch/AArch64/Semantics/FP_MINMAX.cpp"
 #include "lib/Arch/AArch64/Semantics/FP_ARITH_EXTRA.cpp"
 #include "lib/Arch/AArch64/Semantics/FP_RECIP_STEPS.cpp"
+#include "lib/Arch/AArch64/Semantics/FP_FUSED_INDEXED.cpp"
 #include "lib/Arch/AArch64/Semantics/FP_ESTIMATES.cpp"
 #include "lib/Arch/AArch64/Semantics/TABLE.cpp"
 #include "lib/Arch/AArch64/Semantics/LANELOADS.cpp"
