@@ -2245,9 +2245,7 @@ bool TryDecodeFRINTM_H_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FRINTM  <Sd>, <Sn>
-bool TryDecodeFRINTM_S_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // FRINTM FRINTM_D_floatdp1:
 //   0 x Rd       0
@@ -2283,9 +2281,7 @@ bool TryDecodeFRINTM_S_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FRINTM  <Dd>, <Dn>
-bool TryDecodeFRINTM_D_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // LDUMINAB LDUMINAB_32_memop:
 //   0 x Rt       0
@@ -13111,9 +13107,7 @@ bool TryDecodeFRINTP_H_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FRINTP  <Sd>, <Sn>
-bool TryDecodeFRINTP_S_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // FRINTP FRINTP_D_floatdp1:
 //   0 x Rd       0
@@ -13149,9 +13143,7 @@ bool TryDecodeFRINTP_S_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FRINTP  <Dd>, <Dn>
-bool TryDecodeFRINTP_D_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // CASA CASA_C32_ldstexcl:
 //   0 x Rt       0

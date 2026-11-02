@@ -2782,6 +2782,31 @@ bool IsUnallocatedFloatEncoding(const InstData &data) {
   return false;
 }
 
+// Scalar directed round-to-integral: numeric S/D operands.
+bool TryDecodeFRINTP_S_FLOATDP1(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionWrite, kRegS, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegS, kUseAsValue, data.Rn);
+  return true;
+}
+
+bool TryDecodeFRINTP_D_FLOATDP1(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionWrite, kRegD, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegD, kUseAsValue, data.Rn);
+  return true;
+}
+
+bool TryDecodeFRINTM_S_FLOATDP1(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionWrite, kRegS, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegS, kUseAsValue, data.Rn);
+  return true;
+}
+
+bool TryDecodeFRINTM_D_FLOATDP1(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionWrite, kRegD, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegD, kUseAsValue, data.Rn);
+  return true;
+}
+
 // FCVT  <Dd>, <Sn>
 bool TryDecodeFCVT_DS_FLOATDP1(const InstData &data, Instruction &inst) {
   if (IsUnallocatedFloatEncoding(data) || data.opc == 2) {
