@@ -1908,6 +1908,37 @@ bool TryDecodeSTRH_32_LDST_IMMPOST(const InstData &data, Instruction &inst) {
   return true;
 }
 
+// PRFM/PRFUM are architectural cache hints. This implementation selects the
+// permitted no-cache-action behavior, while retaining the decoded address and
+// operation as calculation/immediate operands. In particular, no memory-read
+// operand or SP-alignment check is introduced (DDI0602 PRFM/PRFUM operation).
+static bool DecodePrefetchHint(const InstData &data, Instruction &inst,
+                               int64_t displacement) {
+  Operand address;
+  address.type = Operand::kTypeAddress;
+  address.action = Operand::kActionRead;
+  address.size = 64;
+  address.addr.kind = Operand::Address::kAddressCalculation;
+  address.addr.address_size = 64;
+  address.addr.base_reg = Reg(kActionRead, kRegX, kUseAsAddress, data.Rn);
+  address.addr.displacement = displacement;
+  inst.operands.push_back(address);
+  AddImmOperand(inst, static_cast<uint64_t>(data.Rt));
+  return true;
+}
+
+// PRFM (<prfop>|#<imm5>), [<Xn|SP>{, #<pimm>}]
+bool TryDecodePRFM_P_LDST_POS(const InstData &data, Instruction &inst) {
+  return DecodePrefetchHint(data, inst,
+                            static_cast<int64_t>(data.imm12.uimm << 3));
+}
+
+// PRFUM (<prfop>|#<imm5>), [<Xn|SP>{, #<simm>}]
+bool TryDecodePRFUM_P_LDST_UNSCALED(const InstData &data,
+                                   Instruction &inst) {
+  return DecodePrefetchHint(data, inst, data.imm9.simm9);
+}
+
 // NOP
 bool TryDecodeNOP_HI_SYSTEM(const InstData &, Instruction &) {
   return true;

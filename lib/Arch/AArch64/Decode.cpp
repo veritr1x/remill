@@ -33948,9 +33948,6 @@ bool TryDecodeURSHR_ASIMDSHF_R(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 1 size     1
 // PRFM  (<prfop>|#<imm5>), [<Xn|SP>{, #<pimm>}]
-bool TryDecodePRFM_P_LDST_POS(const InstData &, Instruction &) {
-  return false;
-}
 
 // SYSL SYSL_RC_system:
 //   0 x Rt       0
@@ -40277,9 +40274,6 @@ bool TryDecodeSQDMLSL_ASIMDDIFF_L(const InstData &, Instruction &) {
 //  30 1 size     0
 //  31 1 size     1
 // PRFUM (<prfop>|#<imm5>), [<Xn|SP>{, #<simm>}]
-bool TryDecodePRFUM_P_LDST_UNSCALED(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDSMAXAB LDSMAXAB_32_memop:
 //   0 x Rt       0

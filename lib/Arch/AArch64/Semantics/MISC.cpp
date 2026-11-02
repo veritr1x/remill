@@ -20,6 +20,15 @@ DEF_SEM(DoNOP) {
   return memory;
 }
 
+// Ignoring a prefetch cache hint is an architecturally permitted implementation
+// choice. The address is a calculation, not a target-memory read; do not call
+// Read/Write or change the memory token, State, monitor, or register operands.
+DEF_SEM(DoPrefetchHint, ADDR address, I64 operation) {
+  (void) address;
+  (void) operation;
+  return memory;
+}
+
 }  // namespace
 
 DEF_ISEL(NOP) = DoNOP;
@@ -27,3 +36,6 @@ DEF_ISEL(HINT_1) = DoNOP;
 DEF_ISEL(HINT_2) = DoNOP;
 DEF_ISEL(HINT_3) = DoNOP;
 DEF_ISEL(NOP_HI_SYSTEM) = DoNOP;
+
+DEF_ISEL(PRFM_P_LDST_POS) = DoPrefetchHint;
+DEF_ISEL(PRFUM_P_LDST_UNSCALED) = DoPrefetchHint;
