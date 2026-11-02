@@ -4269,9 +4269,7 @@ bool TryDecodeAESIMC_B_CRYPTOAES(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // UADDW{2}  <Vd>.<Ta>, <Vn>.<Ta>, <Vm>.<Tb>
-bool TryDecodeUADDW_ASIMDDIFF_W(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // STUMAXB STUMAXB_32S_memop:
 //   0 1 Rt       0

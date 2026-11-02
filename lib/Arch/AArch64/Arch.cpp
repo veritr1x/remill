@@ -5323,6 +5323,13 @@ bool TryDecodeSHL_ASISDSHF_R(const InstData &data, Instruction &inst) {
   return TryDecodeIntegerSHL(data, inst, true);
 }
 
+// Both inputs are snapshotted as full vectors; Q selects the narrow half.
+bool TryDecodeUADDW_ASIMDDIFF_W(const InstData &data, Instruction &inst) {
+  if (data.size == 3) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8ULL << data.size);
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegV);
+}
+
 // USHLL always writes 128 bits; Q selects the lower/upper source half.
 // immh==0 and immh<3>==1 are unallocated, not 64-to-128 lane forms.
 bool TryDecodeUSHLL_ASIMDSHF_L(const InstData &data, Instruction &inst) {

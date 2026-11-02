@@ -115,6 +115,29 @@ INTEGER_UNSIGNED_WIDEN(16, 32)
 INTEGER_UNSIGNED_WIDEN(32, 64)
 #undef INTEGER_UNSIGNED_WIDEN
 
+// UADDW widens only its second source. Snapshot both complete inputs before
+// any write, so all destination/source overlaps are ordinary register aliases.
+#define INTEGER_UNSIGNED_ADD_WIDE(narrow, wide) \
+  template <bool high> \
+  DEF_SEM(IntegerUADDW##narrow, V128W dst, V128 lhs, V128 rhs) { \
+    const auto wide_values = UReadV##wide(lhs); \
+    const auto narrow_values = UReadV##narrow(rhs); \
+    auto result = UClearV##wide(UReadV##wide(dst)); \
+    constexpr size_t count = 64 / narrow; \
+    _Pragma("unroll") for (size_t i = 0; i < count; ++i) { \
+      const uint64_t a = UExtractV##wide(wide_values, i); \
+      const uint64_t b = UExtractV##narrow(narrow_values, i + (high ? count : 0)); \
+      /* uint64_t addition wraps even for 32-to-64; final cast truncates. */ \
+      result = UInsertV##wide(result, i, static_cast<uint##wide##_t>(a + b)); \
+    } \
+    UWriteV##wide(dst, result); \
+    return memory; \
+  }
+INTEGER_UNSIGNED_ADD_WIDE(8, 16)
+INTEGER_UNSIGNED_ADD_WIDE(16, 32)
+INTEGER_UNSIGNED_ADD_WIDE(32, 64)
+#undef INTEGER_UNSIGNED_ADD_WIDE
+
 }  // namespace
 
 #define INTEGER_SHIFT_ISEL(arr, size, lanes) \
@@ -148,3 +171,10 @@ DEF_ISEL(USHLL_ASIMDSHF_L_4H) = IntegerUSHLL16<false>;
 DEF_ISEL(USHLL_ASIMDSHF_L_8H) = IntegerUSHLL16<true>;
 DEF_ISEL(USHLL_ASIMDSHF_L_2S) = IntegerUSHLL32<false>;
 DEF_ISEL(USHLL_ASIMDSHF_L_4S) = IntegerUSHLL32<true>;
+
+DEF_ISEL(UADDW_ASIMDDIFF_W_8B) = IntegerUADDW8<false>;
+DEF_ISEL(UADDW_ASIMDDIFF_W_16B) = IntegerUADDW8<true>;
+DEF_ISEL(UADDW_ASIMDDIFF_W_4H) = IntegerUADDW16<false>;
+DEF_ISEL(UADDW_ASIMDDIFF_W_8H) = IntegerUADDW16<true>;
+DEF_ISEL(UADDW_ASIMDDIFF_W_2S) = IntegerUADDW32<false>;
+DEF_ISEL(UADDW_ASIMDDIFF_W_4S) = IntegerUADDW32<true>;
