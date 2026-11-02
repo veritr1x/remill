@@ -25890,9 +25890,6 @@ bool TryDecodeST2_ASISDLSEP_R2_R(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // UXTL{2}  <Vd>.<Ta>, <Vn>.<Tb>
-bool TryDecodeUXTL_USHLL_ASIMDSHF_L(const InstData &, Instruction &) {
-  return false;
-}
 
 // LDSMINA LDSMINA_32_memop:
 //   0 x Rt       0
@@ -38825,9 +38822,6 @@ bool TryDecodeUMLSL_ASIMDDIFF_L(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // USHLL{2}  <Vd>.<Ta>, <Vn>.<Tb>, #<shift>
-bool TryDecodeUSHLL_ASIMDSHF_L(const InstData &, Instruction &) {
-  return false;
-}
 
 // STLR STLR_SL64_ldstexcl:
 //   0 x Rt       0

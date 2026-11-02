@@ -94,6 +94,27 @@ INTEGER_NARROW(16, 32)
 INTEGER_NARROW(32, 64)
 #undef INTEGER_NARROW
 
+// Read the complete source before writing any destination lane, including
+// Vd==Vn and upper-half sources. These unsigned shifts do not change NZCV/FPSR.
+#define INTEGER_UNSIGNED_WIDEN(narrow, wide) \
+  template <bool high> \
+  DEF_SEM(IntegerUSHLL##narrow, V128W dst, V128 src, I64 amount) { \
+    auto values = UReadV##narrow(src); \
+    auto result = UClearV##wide(UReadV##wide(dst)); \
+    constexpr size_t count = 64 / narrow; \
+    const auto shift = Read(amount); \
+    _Pragma("unroll") for (size_t i = 0; i < count; ++i) { \
+      const uint64_t value = UExtractV##narrow(values, i + (high ? count : 0)); \
+      result = UInsertV##wide(result, i, static_cast<uint##wide##_t>(value << shift)); \
+    } \
+    UWriteV##wide(dst, result); \
+    return memory; \
+  }
+INTEGER_UNSIGNED_WIDEN(8, 16)
+INTEGER_UNSIGNED_WIDEN(16, 32)
+INTEGER_UNSIGNED_WIDEN(32, 64)
+#undef INTEGER_UNSIGNED_WIDEN
+
 }  // namespace
 
 #define INTEGER_SHIFT_ISEL(arr, size, lanes) \
@@ -120,3 +141,10 @@ DEF_ISEL(XTN_ASIMDMISC_N_4H) = IntegerXTN16<false>;
 DEF_ISEL(XTN_ASIMDMISC_N_8H) = IntegerXTN16<true>;
 DEF_ISEL(XTN_ASIMDMISC_N_2S) = IntegerXTN32<false>;
 DEF_ISEL(XTN_ASIMDMISC_N_4S) = IntegerXTN32<true>;
+
+DEF_ISEL(USHLL_ASIMDSHF_L_8B) = IntegerUSHLL8<false>;
+DEF_ISEL(USHLL_ASIMDSHF_L_16B) = IntegerUSHLL8<true>;
+DEF_ISEL(USHLL_ASIMDSHF_L_4H) = IntegerUSHLL16<false>;
+DEF_ISEL(USHLL_ASIMDSHF_L_8H) = IntegerUSHLL16<true>;
+DEF_ISEL(USHLL_ASIMDSHF_L_2S) = IntegerUSHLL32<false>;
+DEF_ISEL(USHLL_ASIMDSHF_L_4S) = IntegerUSHLL32<true>;

@@ -5267,6 +5267,26 @@ bool TryDecodeSHL_ASISDSHF_R(const InstData &data, Instruction &inst) {
   return TryDecodeIntegerSHL(data, inst, true);
 }
 
+// USHLL always writes 128 bits; Q selects the lower/upper source half.
+// immh==0 and immh<3>==1 are unallocated, not 64-to-128 lane forms.
+bool TryDecodeUSHLL_ASIMDSHF_L(const InstData &data, Instruction &inst) {
+  uint64_t highest = 0;
+  if (!MostSignificantSetBit(data.immh.uimm, &highest) || highest > 2)
+    return false;
+  const uint64_t bits = 8ULL << highest;
+  const uint64_t shift = (data.immh.uimm << 3) + data.immb.uimm - bits;
+  inst.function = "USHLL_ASIMDSHF_L";
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, bits);
+  if (!TryDecodeRdW_Rn(data, inst, kRegV)) return false;
+  AddImmOperand(inst, shift);
+  return true;
+}
+
+// UXTL is precisely the zero-shift alias, with identical ownership/lanes.
+bool TryDecodeUXTL_USHLL_ASIMDSHF_L(const InstData &data, Instruction &inst) {
+  return TryDecodeUSHLL_ASIMDSHF_L(data, inst);
+}
+
 // Q selects XTN2's upper-half destination; the source is always 128 bits.
 bool TryDecodeXTN_ASIMDMISC_N(const InstData &data, Instruction &inst) {
   if (data.size == 3) return false;
