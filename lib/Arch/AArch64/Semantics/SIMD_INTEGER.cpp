@@ -138,6 +138,37 @@ INTEGER_UNSIGNED_ADD_WIDE(16, 32)
 INTEGER_UNSIGNED_ADD_WIDE(32, 64)
 #undef INTEGER_UNSIGNED_ADD_WIDE
 
+
+// Snapshot both source registers before writing any aliased destination. The
+// unsigned predicate produces a lane mask, with inactive upper bits cleared.
+#define INTEGER_UNSIGNED_HIGHER(bits) \
+  template <size_t lanes> \
+  DEF_SEM(IntegerCMHI##bits, V128W dst, V128 lhs, V128 rhs) { \
+    const auto a = UReadV##bits(lhs); \
+    const auto b = UReadV##bits(rhs); \
+    auto result = UClearV##bits(UReadV##bits(dst)); \
+    _Pragma("unroll") for (size_t i = 0; i < lanes; ++i) { \
+      const auto value = static_cast<uint##bits##_t>( \
+          UExtractV##bits(a, i) > UExtractV##bits(b, i) ? UINT64_MAX : 0); \
+      result = UInsertV##bits(result, i, value); \
+    } \
+    UWriteV##bits(dst, result); \
+    return memory; \
+  }
+INTEGER_UNSIGNED_HIGHER(8)
+INTEGER_UNSIGNED_HIGHER(16)
+INTEGER_UNSIGNED_HIGHER(32)
+INTEGER_UNSIGNED_HIGHER(64)
+#undef INTEGER_UNSIGNED_HIGHER
+
+// Scalar D sources are numeric bits, never vector-address transport.
+DEF_SEM(IntegerCMHIScalar64, V128W dst, R64 lhs, R64 rhs) {
+  const uint64_t a = Read(lhs);
+  const uint64_t b = Read(rhs);
+  UWriteV64(dst, a > b ? UINT64_MAX : UINT64_C(0));
+  return memory;
+}
+
 }  // namespace
 
 #define INTEGER_SHIFT_ISEL(arr, size, lanes) \
@@ -178,3 +209,12 @@ DEF_ISEL(UADDW_ASIMDDIFF_W_4H) = IntegerUADDW16<false>;
 DEF_ISEL(UADDW_ASIMDDIFF_W_8H) = IntegerUADDW16<true>;
 DEF_ISEL(UADDW_ASIMDDIFF_W_2S) = IntegerUADDW32<false>;
 DEF_ISEL(UADDW_ASIMDDIFF_W_4S) = IntegerUADDW32<true>;
+
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_8B) = IntegerCMHI8<8>;
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_16B) = IntegerCMHI8<16>;
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_4H) = IntegerCMHI16<4>;
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_8H) = IntegerCMHI16<8>;
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_2S) = IntegerCMHI32<2>;
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_4S) = IntegerCMHI32<4>;
+DEF_ISEL(CMHI_ASIMDSAME_ONLY_2D) = IntegerCMHI64<2>;
+DEF_ISEL(CMHI_ASISDSAME_ONLY) = IntegerCMHIScalar64;

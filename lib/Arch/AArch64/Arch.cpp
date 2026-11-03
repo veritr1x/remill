@@ -5324,6 +5324,18 @@ bool TryDecodeSHL_ASISDSHF_R(const InstData &data, Instruction &inst) {
 }
 
 // Both inputs are snapshotted as full vectors; Q selects the narrow half.
+// CMHI compares unsigned lanes; 1D vectors and non-D scalar forms are unallocated.
+bool TryDecodeCMHI_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
+  if (data.size == 3 && !data.Q) return false;
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8ULL << data.size);
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegV);
+}
+
+bool TryDecodeCMHI_ASISDSAME_ONLY(const InstData &data, Instruction &inst) {
+  if (data.size != 3) return false;
+  return TryDecodeRdW_Rn_Rm(data, inst, kRegD);
+}
+
 bool TryDecodeUADDW_ASIMDDIFF_W(const InstData &data, Instruction &inst) {
   if (data.size == 3) return false;
   AddArrangementSpecifier(inst, data.Q ? 128 : 64, 8ULL << data.size);

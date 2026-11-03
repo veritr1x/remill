@@ -4381,9 +4381,6 @@ bool TryDecodeSTUMAXLB_32S_MEMOP(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // CMHI  <V><d>, <V><n>, <V><m>
-bool TryDecodeCMHI_ASISDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // CMHI CMHI_asimdsame_only:
 //   0 x Rd       0
@@ -4419,9 +4416,6 @@ bool TryDecodeCMHI_ASISDSAME_ONLY(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // CMHI  <Vd>.<T>, <Vn>.<T>, <Vm>.<T>
-bool TryDecodeCMHI_ASIMDSAME_ONLY(const InstData &, Instruction &) {
-  return false;
-}
 
 // SQDMLAL SQDMLAL_asisddiff_only:
 //   0 x Rd       0
