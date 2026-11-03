@@ -40,33 +40,75 @@ DEF_SEM(UCVTF_UInt64ToFloat64, V128W dst, R64 src) {
   return memory;
 }
 
-DEF_SEM(FCVTZU_Float32ToUInt32, R32W dst, V32 src) {
-  auto raw = UExtractV32(UReadV32(src), 0);
+DEF_SEM(FCVTZU_Float32ToUInt32, R32W dst, R32 src) {
+  auto raw = Read(src);
   auto res = AArch64FloatToIntegerBits<uint32_t, uint32_t, false>(state, raw);
   WriteZExt(dst, res);
   return memory;
 }
 
-DEF_SEM(FCVTZU_Float32ToUInt64, R64W dst, V32 src) {
-  auto raw = UExtractV32(UReadV32(src), 0);
+DEF_SEM(FCVTZU_Float32ToUInt64, R64W dst, R32 src) {
+  auto raw = Read(src);
   auto res = AArch64FloatToIntegerBits<uint32_t, uint64_t, false>(state, raw);
   WriteZExt(dst, res);
   return memory;
 }
 
-DEF_SEM(FCVTZU_Float64ToUInt32, R32W dst, V64 src) {
-  auto raw = UExtractV64(UReadV64(src), 0);
+DEF_SEM(FCVTZU_Float64ToUInt32, R32W dst, R64 src) {
+  auto raw = Read(src);
   auto res = AArch64FloatToIntegerBits<uint64_t, uint32_t, false>(state, raw);
   WriteZExt(dst, res);
   return memory;
 }
 
-DEF_SEM(FCVTZU_Float64ToUInt64, R64W dst, V64 src) {
-  auto raw = UExtractV64(UReadV64(src), 0);
+DEF_SEM(FCVTZU_Float64ToUInt64, R64W dst, R64 src) {
+  auto raw = Read(src);
   auto res = AArch64FloatToIntegerBits<uint64_t, uint64_t, false>(state, raw);
   WriteZExt(dst, res);
   return memory;
 }
+
+// FPToFixed(..., unsigned=TRUE, rounding=ZERO), baseline FP profile.
+// Scale the exponent as integer data. Avoid host FP multiplication/casts and
+// preserve the established fbits=0 helper and all of its exception behavior.
+template <typename In, typename Out>
+ALWAYS_INLINE Out AArch64UnsignedFloatToFixedBits(State &state, In raw,
+                                                uint64_t fbits) {
+  constexpr unsigned fraction_bits = sizeof(In) == 4 ? 23 : 52;
+  constexpr unsigned bias = sizeof(In) == 4 ? 127 : 1023;
+  constexpr In sign_mask = In(1) << (sizeof(In) * 8 - 1);
+  constexpr In fraction_mask = (In(1) << fraction_bits) - In(1);
+  constexpr In exponent_mask = ~(sign_mask | fraction_mask);
+  const unsigned exponent = unsigned((raw & exponent_mask) >> fraction_bits);
+  if (!exponent || (raw & exponent_mask) == exponent_mask) {
+    // With fbits<=64 all S/D subnormals still truncate to zero. Delegation
+    // preserves input FZ/IDC, IXC, signed zero, and NaN/infinity IOC rules.
+    return AArch64FloatToIntegerBits<In, Out, false>(state, raw);
+  }
+  const uint64_t adjusted = uint64_t(exponent) + fbits;
+  if (adjusted >= bias + sizeof(Out) * 8) {
+    state.sr.ioc = 1;
+    return (raw & sign_mask) ? Out(0) : ~Out(0);
+  }
+  // The unsigned output bound also prevents overflow of the FP exponent
+  // field. Significand bits are unchanged; scaling here is exact.
+  const In scaled = (raw & ~exponent_mask) | (In(adjusted) << fraction_bits);
+  return AArch64FloatToIntegerBits<In, Out, false>(state, scaled);
+}
+
+#define FCVTZU_FIXED(input_bits, output_bits) \
+  DEF_SEM(FCVTZU_Fixed##input_bits##ToUInt##output_bits, \
+          R##output_bits##W dst, R##input_bits src, I64 fbits) { \
+    auto result = AArch64UnsignedFloatToFixedBits< \
+        uint##input_bits##_t, uint##output_bits##_t>(state, Read(src), Read(fbits)); \
+    WriteZExt(dst, result); \
+    return memory; \
+  }
+FCVTZU_FIXED(32, 32)
+FCVTZU_FIXED(32, 64)
+FCVTZU_FIXED(64, 32)
+FCVTZU_FIXED(64, 64)
+#undef FCVTZU_FIXED
 
 DEF_SEM(FCVTZS_Float32ToSInt32, R32W dst, V32 src) {
   auto raw = UExtractV32(UReadV32(src), 0);
@@ -125,6 +167,11 @@ DEF_ISEL(FCVTZU_32S_FLOAT2INT) = FCVTZU_Float32ToUInt32;
 
 DEF_ISEL(FCVTZU_32D_FLOAT2INT) = FCVTZU_Float64ToUInt32;
 DEF_ISEL(FCVTZU_64D_FLOAT2INT) = FCVTZU_Float64ToUInt64;
+
+DEF_ISEL(FCVTZU_32S_FLOAT2FIX) = FCVTZU_Fixed32ToUInt32;
+DEF_ISEL(FCVTZU_64S_FLOAT2FIX) = FCVTZU_Fixed32ToUInt64;
+DEF_ISEL(FCVTZU_32D_FLOAT2FIX) = FCVTZU_Fixed64ToUInt32;
+DEF_ISEL(FCVTZU_64D_FLOAT2FIX) = FCVTZU_Fixed64ToUInt64;
 
 DEF_ISEL(FCVTZS_32S_FLOAT2INT) = FCVTZS_Float32ToSInt32;
 DEF_ISEL(FCVTZS_64S_FLOAT2INT) = FCVTZS_Float32ToSInt64;

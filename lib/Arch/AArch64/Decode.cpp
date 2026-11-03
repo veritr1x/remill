@@ -15702,9 +15702,6 @@ bool TryDecodeFCVTZU_64H_FLOAT2FIX(const InstData &, Instruction &) {
 //  30 0
 //  31 0 sf       0
 // FCVTZU  <Wd>, <Sn>, #<fbits>
-bool TryDecodeFCVTZU_32S_FLOAT2FIX(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTZU FCVTZU_64S_float2fix:
 //   0 x Rd       0
@@ -15740,9 +15737,6 @@ bool TryDecodeFCVTZU_32S_FLOAT2FIX(const InstData &, Instruction &) {
 //  30 0
 //  31 1 sf       0
 // FCVTZU  <Xd>, <Sn>, #<fbits>
-bool TryDecodeFCVTZU_64S_FLOAT2FIX(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTZU FCVTZU_32D_float2fix:
 //   0 x Rd       0
@@ -15778,9 +15772,6 @@ bool TryDecodeFCVTZU_64S_FLOAT2FIX(const InstData &, Instruction &) {
 //  30 0
 //  31 0 sf       0
 // FCVTZU  <Wd>, <Dn>, #<fbits>
-bool TryDecodeFCVTZU_32D_FLOAT2FIX(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCVTZU FCVTZU_64D_float2fix:
 //   0 x Rd       0
@@ -15816,9 +15807,6 @@ bool TryDecodeFCVTZU_32D_FLOAT2FIX(const InstData &, Instruction &) {
 //  30 0
 //  31 1 sf       0
 // FCVTZU  <Xd>, <Dn>, #<fbits>
-bool TryDecodeFCVTZU_64D_FLOAT2FIX(const InstData &, Instruction &) {
-  return false;
-}
 
 // SHA1P SHA1P_QSV_cryptosha3:
 //   0 x Rd       0

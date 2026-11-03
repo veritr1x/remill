@@ -2872,6 +2872,30 @@ bool TryDecodeFCVTZS_64D_FLOAT2INT(const InstData &data, Instruction &inst) {
   return true;
 }
 
+// Scalar unsigned fixed-point conversions. The FP source is a numeric
+// S/D carrier; scale encodes fbits=64-scale. FP16 remains unsupported.
+static bool TryDecodeUnsignedFloatToFixed(const InstData &data, Instruction &inst,
+                                          RegClass destination, RegClass source) {
+  if (data.type > 1 || (!data.sf && !(data.scale & 0x20))) return false;
+  AddRegOperand(inst, kActionWrite, destination, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, source, kUseAsValue, data.Rn);
+  AddImmOperand(inst, 64U - data.scale, kUnsigned, 64);
+  return true;
+}
+
+bool TryDecodeFCVTZU_32S_FLOAT2FIX(const InstData &data, Instruction &inst) {
+  return TryDecodeUnsignedFloatToFixed(data, inst, kRegW, kRegS);
+}
+bool TryDecodeFCVTZU_64S_FLOAT2FIX(const InstData &data, Instruction &inst) {
+  return TryDecodeUnsignedFloatToFixed(data, inst, kRegX, kRegS);
+}
+bool TryDecodeFCVTZU_32D_FLOAT2FIX(const InstData &data, Instruction &inst) {
+  return TryDecodeUnsignedFloatToFixed(data, inst, kRegW, kRegD);
+}
+bool TryDecodeFCVTZU_64D_FLOAT2FIX(const InstData &data, Instruction &inst) {
+  return TryDecodeUnsignedFloatToFixed(data, inst, kRegX, kRegD);
+}
+
 // FCVTZU  <Wd>, <Sn>
 bool TryDecodeFCVTZU_32S_FLOAT2INT(const InstData &data, Instruction &inst) {
   if (IsUnallocatedFloatEncoding(data)) {
