@@ -25760,8 +25760,9 @@ bool TryDecodeUMNEGL_UMSUBL_64WA_DP_3SRC(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST2  { <Vt>.<T>, <Vt2>.<T> }, [<Xn|SP>]
-bool TryDecodeST2_ASISDLSE_R2(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeST2_ASISDLSE_R2(const InstData &data, Instruction &inst) {
+  // Shared multiple-structure decoding uses opcode 8 to select two sources.
+  return TryDecodeST4_ASISDLSE_R4(data, inst);
 }
 
 // ST2 ST2_asisdlsep_I2_i:
@@ -25798,8 +25799,9 @@ bool TryDecodeST2_ASISDLSE_R2(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST2  { <Vt>.<T>, <Vt2>.<T> }, [<Xn|SP>], <imm>
-bool TryDecodeST2_ASISDLSEP_I2_I(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeST2_ASISDLSEP_I2_I(const InstData &data, Instruction &inst) {
+  // Shared multiple-structure decoding uses opcode 8 to select two sources.
+  return TryDecodeST4_ASISDLSEP_I4_I(data, inst);
 }
 
 // ST2 ST2_asisdlsep_R2_r:
@@ -25836,8 +25838,9 @@ bool TryDecodeST2_ASISDLSEP_I2_I(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST2  { <Vt>.<T>, <Vt2>.<T> }, [<Xn|SP>], <Xm>
-bool TryDecodeST2_ASISDLSEP_R2_R(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeST2_ASISDLSEP_R2_R(const InstData &data, Instruction &inst) {
+  // Shared multiple-structure decoding uses opcode 8 to select two sources.
+  return TryDecodeST4_ASISDLSEP_R4_R(data, inst);
 }
 
 // USHLL UXTL_USHLL_asimdshf_L:
