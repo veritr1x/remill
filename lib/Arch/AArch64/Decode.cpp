@@ -3551,7 +3551,7 @@ bool TryDecodeSQDMULH_ASIMDSAME_ONLY(const InstData &, Instruction &) {
 //  31 1
 // YIELD
 bool TryDecodeYIELD_HI_SYSTEM(const InstData &, Instruction &) {
-  return false;
+  return true;
 }
 
 // UBFM UXTH_UBFM_32M_bitfield:

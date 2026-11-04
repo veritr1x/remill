@@ -36,6 +36,9 @@ DEF_ISEL(HINT_1) = DoNOP;
 DEF_ISEL(HINT_2) = DoNOP;
 DEF_ISEL(HINT_3) = DoNOP;
 DEF_ISEL(NOP_HI_SYSTEM) = DoNOP;
+// YIELD is an architectural NOP hint: an implementation may ignore the
+// scheduling hint. It neither yields to a host scheduler nor clears monitors.
+DEF_ISEL(YIELD_HI_SYSTEM) = DoNOP;
 
 DEF_ISEL(PRFM_P_LDST_POS) = DoPrefetchHint;
 DEF_ISEL(PRFUM_P_LDST_UNSCALED) = DoPrefetchHint;
