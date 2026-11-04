@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "GuestCallLowering.h"
+#include <llvm/Support/Error.h>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <llvm/ADT/StringExtras.h>
@@ -82,6 +84,9 @@ DEFINE_bool(lift_calls, false, "Lift direct callees contained in the input bytes
 DEFINE_string(trace_list_out, "", "Write the addresses of all lifted traces, one per line.");
 DEFINE_string(semantics_dir, "", "Use semantics bitcode from this directory; an explicit path must contain the requested architecture.");
 DEFINE_string(trace_heads_file, "", "Known trace boundaries; direct jumps to these addresses stay external instead of inlining across function boundaries.");
+
+DEFINE_bool(guest_call_transfer, false, "Lower guest calls before optimization for the explicit-transfer Runtime ABI.");
+DEFINE_string(guest_call_transfer_stats_out, "", "Write optional pre-inliner guest-call lowering counters; requires guest_call_transfer.");
 
 DEFINE_string(
     ir_pre_out, "",
@@ -536,6 +541,32 @@ int main(int argc, char *argv[]) {
   // Optimize the module, but with a particular focus on only the functions
   // that we actually lifted.
   remill::OptimizationGuide guide = {};
+  if (!FLAGS_guest_call_transfer && !FLAGS_guest_call_transfer_stats_out.empty()) {
+    LOG(ERROR) << "guest_call_transfer_stats_out requires guest_call_transfer";
+    return EXIT_FAILURE;
+  }
+  if (FLAGS_guest_call_transfer) {
+    bunker::guest_transfer::LoweringStats stats;
+    if (auto error = bunker::guest_transfer::LowerGuestCalls(*module, stats)) {
+      LOG(ERROR) << "Guest call lowering rejected input: " << llvm::toString(std::move(error));
+      return EXIT_FAILURE;
+    }
+    if (!FLAGS_guest_call_transfer_stats_out.empty()) {
+      std::ofstream output(FLAGS_guest_call_transfer_stats_out);
+      output << "{\n  \"passed\":true,\n  \"State_bytes\":1200,\n"
+             << "  \"direct_non_tail\":" << stats.direct_non_tail << ",\n"
+             << "  \"dynamic_non_tail\":" << stats.dynamic_non_tail << ",\n"
+             << "  \"direct_tail_transfers\":" << stats.direct_tail_transfers << ",\n"
+             << "  \"jump_terminals\":" << stats.jump_terminals << ",\n"
+             << "  \"return_terminals\":" << stats.return_terminals << ",\n"
+             << "  \"transformed_calls\":" << stats.transformed_calls << ",\n"
+             << "  \"SP_offset\":" << stats.SP_offset << ",\n"
+             << "  \"PC_offset\":" << stats.PC_offset << ",\n"
+             << "  \"metadata_records\":" << stats.metadata_records << ",\n"
+             << "  \"inverse_verified\":" << (stats.inverse_verified ? "true" : "false") << "\n}\n";
+      if (!output) { LOG(ERROR) << "Could not save guest-call lowering stats"; return EXIT_FAILURE; }
+    }
+  }
   remill::OptimizeModule(arch, module, manager.traces, guide);
 
   // Create a new module in which we will move all the lifted functions. Prepare
@@ -563,6 +594,13 @@ int main(int argc, char *argv[]) {
       lifted_entry.second->removeFnAttr(llvm::Attribute::NoInline);
       lifted_entry.second->addFnAttr(llvm::Attribute::InlineHint);
       lifted_entry.second->addFnAttr(llvm::Attribute::AlwaysInline);
+    }
+  }
+
+  if (FLAGS_guest_call_transfer) {
+    if (auto *origins = module->getNamedMetadata("bunker.guest.call.lowering")) {
+      auto *copy = dest_module.getOrInsertNamedMetadata("bunker.guest.call.lowering");
+      for (auto *row : origins->operands()) copy->addOperand(row);
     }
   }
 

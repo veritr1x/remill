@@ -23,6 +23,7 @@ set(REMILL_LIFT remill-lift-${REMILL_LLVM_VERSION})
 
 add_executable(${REMILL_LIFT}
   Lift.cpp
+  GuestCallLowering.cpp
 )
 
 #
