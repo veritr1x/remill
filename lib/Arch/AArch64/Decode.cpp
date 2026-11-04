@@ -30002,8 +30002,9 @@ bool TryDecodeWFI_HI_SYSTEM(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST3  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T> }, [<Xn|SP>]
-bool TryDecodeST3_ASISDLSE_R3(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeST3_ASISDLSE_R3(const InstData &data, Instruction &inst) {
+  // The shared multiple-structure decoder selects three sources for opcode 4.
+  return TryDecodeST4_ASISDLSE_R4(data, inst);
 }
 
 // ST3 ST3_asisdlsep_I3_i:
@@ -30040,8 +30041,9 @@ bool TryDecodeST3_ASISDLSE_R3(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST3  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T> }, [<Xn|SP>], <imm>
-bool TryDecodeST3_ASISDLSEP_I3_I(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeST3_ASISDLSEP_I3_I(const InstData &data, Instruction &inst) {
+  // The shared multiple-structure decoder selects three sources for opcode 4.
+  return TryDecodeST4_ASISDLSEP_I4_I(data, inst);
 }
 
 // ST3 ST3_asisdlsep_R3_r:
@@ -30078,8 +30080,9 @@ bool TryDecodeST3_ASISDLSEP_I3_I(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // ST3  { <Vt>.<T>, <Vt2>.<T>, <Vt3>.<T> }, [<Xn|SP>], <Xm>
-bool TryDecodeST3_ASISDLSEP_R3_R(const InstData &, Instruction &) {
-  return false;
+bool TryDecodeST3_ASISDLSEP_R3_R(const InstData &data, Instruction &inst) {
+  // The shared multiple-structure decoder selects three sources for opcode 4.
+  return TryDecodeST4_ASISDLSEP_R4_R(data, inst);
 }
 
 // SQRDMULH SQRDMULH_asisdelem_R:

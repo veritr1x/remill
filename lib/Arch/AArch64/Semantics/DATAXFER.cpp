@@ -1348,6 +1348,63 @@ ST2_ISEL(2D, 64, 2, V128)
 
 namespace {
 
+// Dn is a numeric 64-bit carrier; Qn is a vector-register address.
+ALWAYS_INLINE static uint128_t ST3ReadBits(Memory *memory, R64 src) {
+  return static_cast<uint128_t>(Read(src));
+}
+ALWAYS_INLINE static uint128_t ST3ReadBits(Memory *memory, V128 src) {
+  return UExtractV128(UReadV128(src), 0);
+}
+
+#define ST3_SEMANTICS(size) \
+  template <typename S, typename D, size_t count> \
+  DEF_SEM(ST3_##size, S src1, S src2, S src3, D dst) { \
+    const auto a = ST3ReadBits(memory, src1); \
+    const auto b = ST3ReadBits(memory, src2); \
+    const auto c = ST3ReadBits(memory, src3); \
+    _Pragma("unroll") for (size_t i = 0; i < count; ++i) { \
+      Write(dst, static_cast<uint##size##_t>(a >> (i * size))); \
+      dst = GetElementPtr(dst, 1); \
+      Write(dst, static_cast<uint##size##_t>(b >> (i * size))); \
+      dst = GetElementPtr(dst, 1); \
+      Write(dst, static_cast<uint##size##_t>(c >> (i * size))); \
+      dst = GetElementPtr(dst, 1); \
+    } \
+    return memory; \
+  } \
+  template <typename S, typename D, size_t count> \
+  DEF_SEM(ST3_##size##_POSTINDEX, S src1, S src2, S src3, D dst, \
+          R64W addr_reg, ADDR next_addr) { \
+    const auto next = Read(next_addr); \
+    memory = ST3_##size<S, D, count>(memory, state, src1, src2, src3, dst); \
+    Write(addr_reg, next); \
+    return memory; \
+  }
+
+ST3_SEMANTICS(8)
+ST3_SEMANTICS(16)
+ST3_SEMANTICS(32)
+ST3_SEMANTICS(64)
+#undef ST3_SEMANTICS
+
+}  // namespace
+
+#define ST3_ISEL(arr, size, count, source) \
+  DEF_ISEL(ST3_ASISDLSE_R3_##arr) = ST3_##size<source, M##size##W, count>; \
+  DEF_ISEL(ST3_ASISDLSEP_I3_I_##arr) = ST3_##size##_POSTINDEX<source, M##size##W, count>; \
+  DEF_ISEL(ST3_ASISDLSEP_R3_R_##arr) = ST3_##size##_POSTINDEX<source, M##size##W, count>;
+
+ST3_ISEL(8B, 8, 8, R64)
+ST3_ISEL(16B, 8, 16, V128)
+ST3_ISEL(4H, 16, 4, R64)
+ST3_ISEL(8H, 16, 8, V128)
+ST3_ISEL(2S, 32, 2, R64)
+ST3_ISEL(4S, 32, 4, V128)
+ST3_ISEL(2D, 64, 2, V128)
+#undef ST3_ISEL
+
+namespace {
+
 #define LDST4_SEMANTICS(size) \
   template <typename S, size_t count> \
   DEF_SEM(LD4_##size##_POSTINDEX, V128W dst1, V128W dst2, V128W dst3, V128W dst4, \
