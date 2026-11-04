@@ -1643,9 +1643,7 @@ bool TryDecodeFMINNM_H_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMINNM  <Sd>, <Sn>, <Sm>
-bool TryDecodeFMINNM_S_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // FMINNM FMINNM_D_floatdp2:
 //   0 x Rd       0
@@ -1681,9 +1679,7 @@ bool TryDecodeFMINNM_S_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMINNM  <Dd>, <Dn>, <Dm>
-bool TryDecodeFMINNM_D_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // LDTRSW LDTRSW_64_ldst_unpriv:
 //   0 x Rt       0
@@ -28316,9 +28312,7 @@ bool TryDecodeFMAXNM_H_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMAXNM  <Sd>, <Sn>, <Sm>
-bool TryDecodeFMAXNM_S_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // FMAXNM FMAXNM_D_floatdp2:
 //   0 x Rd       0
@@ -28354,9 +28348,7 @@ bool TryDecodeFMAXNM_S_FLOATDP2(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FMAXNM  <Dd>, <Dn>, <Dm>
-bool TryDecodeFMAXNM_D_FLOATDP2(const InstData &, Instruction &) {
-  return false;
-}
+
 
 // CNT CNT_asimdmisc_R:
 //   0 x Rd       0

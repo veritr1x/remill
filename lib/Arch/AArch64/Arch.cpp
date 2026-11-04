@@ -5586,3 +5586,22 @@ auto Arch::GetAArch64(llvm::LLVMContext *context_, OSName os_name_,
 }
 
 }  // namespace remill
+
+namespace remill {
+namespace aarch64 {
+
+// Scalar numeric minimum/maximum: half, vector and pairwise forms stay unsupported.
+bool TryDecodeFMINNM_S_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegS);
+}
+bool TryDecodeFMINNM_D_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegD);
+}
+bool TryDecodeFMAXNM_S_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegS);
+}
+bool TryDecodeFMAXNM_D_FLOATDP2(const InstData &data, Instruction &inst) {
+  return TryDecodeFdW_Fn_Fm(data, inst, kRegD);
+}
+}  // namespace aarch64
+}  // namespace remill
