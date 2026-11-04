@@ -38537,9 +38537,6 @@ bool TryDecodeFADDP_ASISDPAIR_ONLY_H(const InstData &, Instruction &) {
 //  30 1
 //  31 0
 // FADDP  <V><d>, <Vn>.<T>
-bool TryDecodeFADDP_ASISDPAIR_ONLY_SD(const InstData &, Instruction &) {
-  return false;
-}
 
 // SSHR SSHR_asisdshf_R:
 //   0 x Rd       0

@@ -495,6 +495,32 @@ DEF_ISEL(FDIV_D_FLOATDP2) = FDIV_Scalar64;
 
 namespace {
 
+// Addition is exactly lane0 + (positive one * lane1). The existing integer
+// fused helper supplies ARM NaN priority, signed zero, FZ/DN and sticky flags;
+// the exact unit product adds neither a rounding nor a multiplication exception.
+DEF_SEM(FADDP_ScalarPair32, V128W dst, V128 src) {
+  const auto lanes = UReadV32(src);
+  const auto result = IndexedFusedFPBits<uint32_t>(
+      state, UExtractV32(lanes, 0), UINT32_C(0x3f800000), UExtractV32(lanes, 1));
+  UWriteV32(dst, result);
+  return memory;
+}
+
+DEF_SEM(FADDP_ScalarPair64, V128W dst, V128 src) {
+  const auto lanes = UReadV64(src);
+  const auto result = IndexedFusedFPBits<uint64_t>(
+      state, UExtractV64(lanes, 0), UINT64_C(0x3ff0000000000000), UExtractV64(lanes, 1));
+  UWriteV64(dst, result);
+  return memory;
+}
+
+}  // namespace
+
+DEF_ISEL(FADDP_ASISDPAIR_ONLY_SD_S) = FADDP_ScalarPair32;
+DEF_ISEL(FADDP_ASISDPAIR_ONLY_SD_D) = FADDP_ScalarPair64;
+
+namespace {
+
 // Vector forms: each lane goes through CheckedFloatBinOp, so FPSR's cumulative
 // exception bits collect the exceptions of every lane, as on hardware.
 #define MAKE_FP_VECTOR_OP(name, op, size) \

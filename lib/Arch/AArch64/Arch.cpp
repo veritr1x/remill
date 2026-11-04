@@ -4573,6 +4573,14 @@ bool TryDecodeFADDP_ASIMDSAME_ONLY(const InstData &data, Instruction &inst) {
   return TryDecodeFP_ASIMDSAME(data, inst);
 }
 
+// FADDP scalar pair: source is a full vector snapshot; result clears upper bits.
+bool TryDecodeFADDP_ASISDPAIR_ONLY_SD(const InstData &data, Instruction &inst) {
+  inst.function += data.sz ? "_D" : "_S";
+  AddRegOperand(inst, kActionWrite, kRegV, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegV, kUseAsValue, data.Rn);
+  return true;
+}
+
 // The element index and register of the by-element forms (single and double precision).
 static bool DecodeFPElement(const InstData &data, uint64_t *index,
                             RegNum *reg) {
