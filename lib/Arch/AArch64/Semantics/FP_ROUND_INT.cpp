@@ -61,9 +61,65 @@ DEF_SEM(ScalarRoundIntegral64, V128W dst, R64 src) {
                     state, Read(src))));
   return memory;
 }
+
+// FPRoundInt(..., rounding=TIEAWAY, exact=FALSE), in the same baseline
+// FP-enabled, traps-disabled, non-AFP profile as directed rounding above.
+// Operate entirely on numeric bits: native FP rounding and flags are untouched.
+template <typename T>
+ALWAYS_INLINE T AArch64RoundTiesAwayBits(State &state, T raw) {
+  constexpr unsigned fraction_bits = sizeof(T) == 4 ? 23 : 52;
+  constexpr unsigned bias = sizeof(T) == 4 ? 127 : 1023;
+  constexpr T fraction_mask = (T(1) << fraction_bits) - T(1);
+  constexpr T sign_mask = T(1) << (sizeof(T) * 8 - 1);
+  constexpr T exponent_mask = ~(sign_mask | fraction_mask);
+  constexpr T quiet_bit = T(1) << (fraction_bits - 1);
+  const T fraction = raw & fraction_mask;
+  const unsigned encoded_exponent =
+      unsigned((raw & exponent_mask) >> fraction_bits);
+
+  if ((raw & exponent_mask) == exponent_mask) {
+    if (!fraction) return raw;
+    if (!(fraction & quiet_bit)) state.sr.ioc = 1;
+    if (state.fpcr.dn) return exponent_mask | quiet_bit;
+    return raw | quiet_bit;
+  }
+  if (!encoded_exponent) {
+    if (!fraction) return raw;
+    if (state.fpcr.fz) {
+      state.sr.idc = 1;
+      return raw & sign_mask;
+    }
+  }
+  const int exponent = int(encoded_exponent) - int(bias);
+  if (exponent >= int(fraction_bits)) return raw;
+  if (exponent < -1) return raw & sign_mask;
+  // Every magnitude in [0.5,1) rounds to one, including the exact tie.
+  if (exponent == -1) return (raw & sign_mask) | (T(bias) << fraction_bits);
+
+  const unsigned shift = fraction_bits - unsigned(exponent);
+  const T discarded_mask = (T(1) << shift) - T(1);
+  const T half = T(1) << (shift - 1);
+  T result = raw & ~discarded_mask;
+  if ((raw & discarded_mask) >= half) result += T(1) << shift;
+  // Sign is retained; at a half tie the magnitude is always incremented.
+  // exact=FALSE: no new IXC, and all existing sticky status is retained.
+  return result;
+}
+
+DEF_SEM(ScalarRoundTiesAway32, V128W dst, R32 src) {
+  UWriteV32(dst, AArch64RoundTiesAwayBits<uint32_t>(state, Read(src)));
+  return memory;
+}
+
+DEF_SEM(ScalarRoundTiesAway64, V128W dst, R64 src) {
+  UWriteV64(dst, AArch64RoundTiesAwayBits<uint64_t>(state, Read(src)));
+  return memory;
+}
 }  // namespace
 
 DEF_ISEL(FRINTP_S_FLOATDP1) = ScalarRoundIntegral32<true>;
 DEF_ISEL(FRINTP_D_FLOATDP1) = ScalarRoundIntegral64<true>;
 DEF_ISEL(FRINTM_S_FLOATDP1) = ScalarRoundIntegral32<false>;
 DEF_ISEL(FRINTM_D_FLOATDP1) = ScalarRoundIntegral64<false>;
+DEF_ISEL(FRINTA_S_FLOATDP1) = ScalarRoundTiesAway32;
+DEF_ISEL(FRINTA_D_FLOATDP1) = ScalarRoundTiesAway64;

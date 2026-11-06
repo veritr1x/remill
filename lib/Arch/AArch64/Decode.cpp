@@ -37091,9 +37091,6 @@ bool TryDecodeFRINTA_H_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FRINTA  <Sd>, <Sn>
-bool TryDecodeFRINTA_S_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
 
 // FRINTA FRINTA_D_floatdp1:
 //   0 x Rd       0
@@ -37129,9 +37126,6 @@ bool TryDecodeFRINTA_S_FLOATDP1(const InstData &, Instruction &) {
 //  30 0
 //  31 0 M        0
 // FRINTA  <Dd>, <Dn>
-bool TryDecodeFRINTA_D_FLOATDP1(const InstData &, Instruction &) {
-  return false;
-}
 
 // FCSEL FCSEL_H_floatsel:
 //   0 x Rd       0

@@ -2807,6 +2807,19 @@ bool TryDecodeFRINTM_D_FLOATDP1(const InstData &data, Instruction &inst) {
   return true;
 }
 
+// Scalar nearest round-to-integral, with ties away from zero.
+bool TryDecodeFRINTA_S_FLOATDP1(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionWrite, kRegS, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegS, kUseAsValue, data.Rn);
+  return true;
+}
+
+bool TryDecodeFRINTA_D_FLOATDP1(const InstData &data, Instruction &inst) {
+  AddRegOperand(inst, kActionWrite, kRegD, kUseAsValue, data.Rd);
+  AddRegOperand(inst, kActionRead, kRegD, kUseAsValue, data.Rn);
+  return true;
+}
+
 // FCVT  <Dd>, <Sn>
 bool TryDecodeFCVT_DS_FLOATDP1(const InstData &data, Instruction &inst) {
   if (IsUnallocatedFloatEncoding(data) || data.opc == 2) {
