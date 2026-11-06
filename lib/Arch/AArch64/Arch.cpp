@@ -5394,6 +5394,25 @@ bool TryDecodeUXTL_USHLL_ASIMDSHF_L(const InstData &data, Instruction &inst) {
   return TryDecodeUSHLL_ASIMDSHF_L(data, inst);
 }
 
+// Signed widening uses the same allocated widths, source half and immediate
+// encoding as USHLL. Both source halves write a complete 128-bit destination.
+bool TryDecodeSSHLL_ASIMDSHF_L(const InstData &data, Instruction &inst) {
+  uint64_t highest = 0;
+  if (!MostSignificantSetBit(data.immh.uimm, &highest) || highest > 2)
+    return false;
+  const uint64_t bits = 8ULL << highest;
+  const uint64_t shift = (data.immh.uimm << 3) + data.immb.uimm - bits;
+  inst.function = "SSHLL_ASIMDSHF_L";
+  AddArrangementSpecifier(inst, data.Q ? 128 : 64, bits);
+  if (!TryDecodeRdW_Rn(data, inst, kRegV)) return false;
+  AddImmOperand(inst, shift);
+  return true;
+}
+
+bool TryDecodeSXTL_SSHLL_ASIMDSHF_L(const InstData &data, Instruction &inst) {
+  return TryDecodeSSHLL_ASIMDSHF_L(data, inst);
+}
+
 // Q selects XTN2's upper-half destination; the source is always 128 bits.
 bool TryDecodeXTN_ASIMDMISC_N(const InstData &data, Instruction &inst) {
   if (data.size == 3) return false;

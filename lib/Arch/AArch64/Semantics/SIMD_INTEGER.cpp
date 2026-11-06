@@ -115,6 +115,28 @@ INTEGER_UNSIGNED_WIDEN(16, 32)
 INTEGER_UNSIGNED_WIDEN(32, 64)
 #undef INTEGER_UNSIGNED_WIDEN
 
+// Sign-extend before shifting, then use unsigned arithmetic: left shifting a
+// negative C++ integer would be undefined. Snapshot source before aliased writes.
+#define INTEGER_SIGNED_WIDEN(narrow, wide) \
+  template <bool high> \
+  DEF_SEM(IntegerSSHLL##narrow, V128W dst, V128 src, I64 amount) { \
+    const auto values = SReadV##narrow(src); \
+    auto result = UClearV##wide(UReadV##wide(dst)); \
+    constexpr size_t count = 64 / narrow; \
+    const auto shift = Read(amount); \
+    _Pragma("unroll") for (size_t i = 0; i < count; ++i) { \
+      const int64_t extended = SExtractV##narrow(values, i + (high ? count : 0)); \
+      const uint64_t bits = static_cast<uint64_t>(extended); \
+      result = UInsertV##wide(result, i, static_cast<uint##wide##_t>(bits << shift)); \
+    } \
+    UWriteV##wide(dst, result); \
+    return memory; \
+  }
+INTEGER_SIGNED_WIDEN(8, 16)
+INTEGER_SIGNED_WIDEN(16, 32)
+INTEGER_SIGNED_WIDEN(32, 64)
+#undef INTEGER_SIGNED_WIDEN
+
 // UADDW widens only its second source. Snapshot both complete inputs before
 // any write, so all destination/source overlaps are ordinary register aliases.
 #define INTEGER_UNSIGNED_ADD_WIDE(narrow, wide) \
@@ -202,6 +224,13 @@ DEF_ISEL(USHLL_ASIMDSHF_L_4H) = IntegerUSHLL16<false>;
 DEF_ISEL(USHLL_ASIMDSHF_L_8H) = IntegerUSHLL16<true>;
 DEF_ISEL(USHLL_ASIMDSHF_L_2S) = IntegerUSHLL32<false>;
 DEF_ISEL(USHLL_ASIMDSHF_L_4S) = IntegerUSHLL32<true>;
+
+DEF_ISEL(SSHLL_ASIMDSHF_L_8B) = IntegerSSHLL8<false>;
+DEF_ISEL(SSHLL_ASIMDSHF_L_16B) = IntegerSSHLL8<true>;
+DEF_ISEL(SSHLL_ASIMDSHF_L_4H) = IntegerSSHLL16<false>;
+DEF_ISEL(SSHLL_ASIMDSHF_L_8H) = IntegerSSHLL16<true>;
+DEF_ISEL(SSHLL_ASIMDSHF_L_2S) = IntegerSSHLL32<false>;
+DEF_ISEL(SSHLL_ASIMDSHF_L_4S) = IntegerSSHLL32<true>;
 
 DEF_ISEL(UADDW_ASIMDDIFF_W_8B) = IntegerUADDW8<false>;
 DEF_ISEL(UADDW_ASIMDDIFF_W_16B) = IntegerUADDW8<true>;

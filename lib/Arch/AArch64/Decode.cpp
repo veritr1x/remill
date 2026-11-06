@@ -7531,9 +7531,6 @@ bool TryDecodeLDLAR_LR64_LDSTEXCL(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // SSHLL{2}  <Vd>.<Ta>, <Vn>.<Tb>, #<shift>
-bool TryDecodeSSHLL_ASIMDSHF_L(const InstData &, Instruction &) {
-  return false;
-}
 
 // STCLRB STCLRB_32S_memop:
 //   0 1 Rt       0
@@ -30789,9 +30786,6 @@ bool TryDecodeLDURSH_64_LDST_UNSCALED(const InstData &, Instruction &) {
 //  30 x Q        0
 //  31 0
 // SXTL{2}  <Vd>.<Ta>, <Vn>.<Tb>
-bool TryDecodeSXTL_SSHLL_ASIMDSHF_L(const InstData &, Instruction &) {
-  return false;
-}
 
 // ST1 ST1_asisdlso_B1_1b:
 //   0 x Rt       0
